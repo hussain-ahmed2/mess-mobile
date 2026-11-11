@@ -1,0 +1,11 @@
+<resources>
+    <!-- Splash screen background, matches the animated in-app splash overlay. -->
+    <color name="splash_background">#208AEF</color>
+
+    <!-- App backgrounds, light + dark. -->
+    <color name="background_light">#FFFFFF</color>
+    <color name="background_dark">#000000</color>
+
+    <!-- Accent used by the launcher icon gradient and the "link" text style. -->
+    <color name="link_primary">#3C87F7</color>
+</resources>

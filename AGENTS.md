@@ -1,41 +1,63 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+This is a **native Android** app written in Kotlin with Jetpack Compose. There is no React
+Native, no Expo and no JS toolchain in this repository.
 
-## Expo has changed — do not trust your training data
+The app is a **local only** mess manager: the data lives in a Room database on the device,
+there is no server and no account. The backup and restore feature writes the whole database
+into a JSON file so the user gets their data back after an uninstall.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+Prioritize mobile-first patterns, performance and cross-device compatibility.
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+## Versions are pinned, verify before upgrading
+
+Gradle, AGP, Kotlin and the AndroidX libraries are pinned in `gradle/libs.versions.toml` and
+`build.gradle.kts`. Do not bump them without checking the compatibility matrix:
+
+- AGP 9.5.1 requires Gradle 9.6.0+ and JDK 17.
+- AGP 9 has **built-in Kotlin support**: do **not** apply `org.jetbrains.kotlin.android`.
+  The Kotlin Gradle plugin version is pinned through `buildscript { classpath(...) }` in the root
+  `build.gradle.kts` and has to stay in sync with `libs.versions.toml`.
+- Every AndroidX dependency declares a `minCompileSdk` in its AAR metadata. The app compiles
+  against SDK 36, so a dependency that requires 37+ breaks the build. Check
+  `META-INF/com/android/build/gradle/aar-metadata.properties` before bumping a version.
+- Room is processed with KSP, the KSP version is independent of the Kotlin version but has to
+  support the Kotlin compiler that is used.
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
-
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+./gradlew assembleDebug     # debug APK
+./gradlew assembleRelease   # release APK (needs signing secrets)
+./gradlew test              # unit tests
+./gradlew lintDebug         # Android lint
 ```
 
-Run lint and typecheck before declaring any task done.
+Use the Gradle wrapper, never a system Gradle. JDK 17 is the reference JDK.
 
-## Navigation & Routing
+## Structure
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+- The screens live in `app/src/main/java/com/hussain/messmobile/ui/screens/`, one package per
+  screen.
+- Reusable UI lives in `app/src/main/java/com/hussain/messmobile/ui/components/`, the dialogs
+  are grouped in `MessDialogs.kt`.
+- The view models live in `app/src/main/java/com/hussain/messmobile/ui/mess/` and are created by
+  `ViewModelFactory`.
+- The database lives in `app/src/main/java/com/hussain/messmobile/data/local/`, the only place
+  that talks to Room is `MessRepository`.
+- Colours, spacing and typography live in `app/src/main/java/com/hussain/messmobile/ui/theme/`.
+  The colour palette is provided with `LocalAppColors` / `appColors`, use `ThemedText` and the
+  `appColors` accessor instead of hard coded colours so light and dark mode keep working.
+- Navigation is set up in `ui/navigation/AppTabs.kt`, one enum entry per tab.
 
 ## Rules
 
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+- The database is the single source of truth. Screens read from the repository flows and write
+  through the view models, never through a DAO.
+- Never commit a keystore, a password or any other signing material. The release build reads
+  them from environment variables (`ANDROID_KEYSTORE_*`) or from `~/.gradle/gradle.properties`
+  (`MESS_UPLOAD_*`).
+- The release APK is built by CI (`.github/workflows/release.yml`), not on a developer machine.
+  Keep the workflow in sync with `compileSdk`/`buildToolsVersion` changes.
+- The backup format is a public contract: it has to stay readable by every version of the app.
+  Bump `BackupFile.CURRENT_FORMAT_VERSION` when the format changes in an incompatible way and
+  keep `BackupFileTest` up to date.
+- Run `./gradlew test lintDebug` before declaring a task done.
