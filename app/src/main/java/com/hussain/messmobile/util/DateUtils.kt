@@ -57,5 +57,5 @@ object DateUtils {
 
     /** Turns the local midnight of a day into the UTC midnight the date picker expects. */
     fun toUtcMillis(localMidnight: Long): Long =
-        Instant.ofEpochMilli(localMidnight).atZone(ZoneOffset.UTC).toInstant().toEpochMilli()
+        toLocalDate(localMidnight).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 }

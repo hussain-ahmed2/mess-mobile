@@ -25,6 +25,12 @@ interface ExpenseDao {
 
     @Query("DELETE FROM expenses WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM expenses")
+    suspend fun deleteAll()
+
+    @Insert
+    suspend fun insertAll(items: List<ExpenseEntity>)
 }
 
 @Dao
@@ -51,11 +57,8 @@ interface ShoppingDao {
     @Query("DELETE FROM shopping_items WHERE purchased = 1")
     suspend fun deletePurchased()
 
-    @Query("DELETE FROM expenses")
-    suspend fun deleteAll()
 
-    @Insert
-    suspend fun insertAll(items: List<ExpenseEntity>)
+
 
 
     @Query("DELETE FROM shopping_items")
@@ -63,5 +66,4 @@ interface ShoppingDao {
 
     @Insert
     suspend fun insertAll(items: List<ShoppingItemEntity>)
-
 }

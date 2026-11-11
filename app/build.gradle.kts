@@ -5,32 +5,14 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-/**
- * Release signing values are never stored in the repository.
- *
- * They are read from environment variables first (this is what CI uses) and fall back to
- * Gradle properties so a developer can sign locally from `~/.gradle/gradle.properties`:
- *
- *     MESS_UPLOAD_STORE_FILE=/abs/path/release.keystore
- *     MESS_UPLOAD_STORE_PASSWORD=...
- *     MESS_UPLOAD_KEY_ALIAS=...
- *     MESS_UPLOAD_KEY_PASSWORD=...
- */
-fun signingValue(envName: String, propertyName: String): String? =
-    providers.environmentVariable(envName).orNull
-        ?: providers.gradleProperty(propertyName).orNull
-
-val keystorePath = signingValue("ANDROID_KEYSTORE_PATH", "MESS_UPLOAD_STORE_FILE")
-val keystorePassword = signingValue("ANDROID_KEYSTORE_PASSWORD", "MESS_UPLOAD_STORE_PASSWORD")
-val keyAlias = signingValue("ANDROID_KEY_ALIAS", "MESS_UPLOAD_KEY_ALIAS")
-val keyPassword = signingValue("ANDROID_KEY_PASSWORD", "MESS_UPLOAD_KEY_PASSWORD")
-
-val hasReleaseSigning =
-    listOf(keystorePath, keystorePassword, keyAlias, keyPassword).all { !it.isNullOrBlank() }
-
 android {
     namespace = "com.hussain.messmobile"
-    compileSdk = 36
+
+    // The current AndroidX libraries (the Compose BOM pulls in lifecycle 2.11) require the app
+    // to compile against API 37. `targetSdk` stays at 36, that is what the Play Store asks
+    // for today.
+    compileSdk = 37
+    compileSdkMinor = 0
 
     defaultConfig {
         applicationId = "com.hussain.messmobile"
@@ -45,17 +27,6 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
-    signingConfigs {
-        if (hasReleaseSigning) {
-            create("release") {
-                storeFile = file(keystorePath!!)
-                storePassword = keystorePassword
-                keyAlias = keyAlias
-                keyPassword = keyPassword
-            }
-        }
-    }
-
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -68,7 +39,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            signingConfig = signingConfigs.findByName("release")
         }
     }
 

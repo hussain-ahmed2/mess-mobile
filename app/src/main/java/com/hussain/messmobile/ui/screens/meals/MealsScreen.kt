@@ -122,7 +122,7 @@ fun MealsScreen(
                     )
                 }
 
-                Column(horizontalArrangement = Arrangement.spacedBy(Spacing.one)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     if (meal.totalCost > 0.0 && mealWithEntries.optedIn > 0) {
                         TextButton(onClick = { viewModel.splitCost(meal.id) }) {
                             ThemedText(text = "Share the cost", style = AppTextStyle.LinkPrimary)

@@ -30,7 +30,7 @@ uninstall or on another phone.
 | Storage | Room 2.8 (KSP) |
 | Backup format | JSON (kotlinx.serialization) |
 | Build | Gradle 9.9.1, Android Gradle Plugin 9.5.1 |
-| SDK | `compileSdk` 36, `targetSdk` 36, `minSdk` 24 |
+| SDK | `compileSdk` 37, `targetSdk` 36, `minSdk` 24 |
 | JDK | 17 |
 
 > AGP 9 has **built-in Kotlin support**, the `org.jetbrains.kotlin.android` plugin is therefore
@@ -122,14 +122,23 @@ base64 -w 0 release.keystore
 Store the output of `base64` in `ANDROID_KEYSTORE_BASE64`. **Never commit the keystore**, the
 `.gitignore` already ignores `*.jks` and `*.keystore`.
 
+### How the release APK is signed
+
+Gradle builds the release APK **unsigned**, the CI signs it with `apksigner`. The keystore
+therefore never has to be part of the Gradle configuration and cannot leak into the build
+script or into a stack trace.
+
 ### Signing outside of CI
 
-The Gradle build reads the signing values from environment variables first and from Gradle
-properties second, so a developer can sign locally from `~/.gradle/gradle.properties`:
+The same two commands work on a developer machine:
 
-```properties
-MESS_UPLOAD_STORE_FILE=/absolute/path/release.keystore
-MESS_UPLOAD_STORE_PASSWORD=...
-MESS_UPLOAD_KEY_ALIAS=upload
-MESS_UPLOAD_KEY_PASSWORD=...
+```bash
+./gradlew assembleRelease
+"$ANDROID_HOME/build-tools/37.0.0/apksigner" sign \
+  --ks /absolute/path/release.keystore \
+  --ks-key-alias upload \
+  --ks-pass pass:YOUR_STORE_PASSWORD \
+  --key-pass pass:YOUR_KEY_PASSWORD \
+  --out mess-mobile.apk \
+  app/build/outputs/apk/release/app-release-unsigned.apk
 ```

@@ -29,6 +29,12 @@ interface DuesDao {
 
     @Query("DELETE FROM dues WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM dues")
+    suspend fun deleteAll()
+
+    @Insert
+    suspend fun insertAll(items: List<DuesEntity>)
 }
 
 @Dao
@@ -49,11 +55,8 @@ interface PaymentDao {
     @Query("DELETE FROM payments WHERE id = :id")
     suspend fun deleteById(id: Long)
 
-    @Query("DELETE FROM dues")
-    suspend fun deleteAll()
 
-    @Insert
-    suspend fun insertAll(items: List<DuesEntity>)
+
 
 
     @Query("DELETE FROM payments")
@@ -61,5 +64,4 @@ interface PaymentDao {
 
     @Insert
     suspend fun insertAll(items: List<PaymentEntity>)
-
 }

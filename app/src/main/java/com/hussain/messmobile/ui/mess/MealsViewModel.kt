@@ -32,11 +32,11 @@ data class MealWithEntries(
 class MealsViewModel(private val repository: MessRepository) : ViewModel() {
 
     private val selectedDate = MutableStateFlow(DateUtils.startOfToday())
-    private val selectedMealId = MutableStateFlow<Long?>(null)
+    private val selectedMealIdFlow = MutableStateFlow<Long?>(null)
 
     val selectedDateMillis: StateFlow<Long> = selectedDate
 
-    val selectedMealId: StateFlow<Long?> = selectedMealId
+    val selectedMealId: StateFlow<Long?> = selectedMealIdFlow
 
     val members: StateFlow<List<MemberEntity>> = repository.activeMembers.stateIn(
         scope = viewModelScope,
@@ -58,7 +58,7 @@ class MealsViewModel(private val repository: MessRepository) : ViewModel() {
     )
 
     /** The entries of the meal that is currently open. */
-    val selectedMealEntries: StateFlow<List<MealEntryEntity>> = selectedMealId
+    val selectedMealEntries: StateFlow<List<MealEntryEntity>> = selectedMealIdFlow
         .flatMapLatest { mealId ->
             if (mealId == null) flowOf(emptyList()) else repository.entriesForMeal(mealId)
         }
@@ -79,7 +79,7 @@ class MealsViewModel(private val repository: MessRepository) : ViewModel() {
     }
 
     fun selectMeal(mealId: Long?) {
-        selectedMealId.value = mealId
+        selectedMealIdFlow.value = mealId
     }
 
     fun addMeal(
@@ -91,7 +91,7 @@ class MealsViewModel(private val repository: MessRepository) : ViewModel() {
     ) {
         viewModelScope.launch {
             val id = repository.addMeal(selectedDate.value, type, description, cookId, totalCost)
-            selectedMealId.value = id
+            selectedMealIdFlow.value = id
             onDone(id)
         }
     }
@@ -111,7 +111,7 @@ class MealsViewModel(private val repository: MessRepository) : ViewModel() {
     fun deleteMeal(meal: MealEntity) {
         viewModelScope.launch {
             repository.deleteMeal(meal)
-            if (selectedMealId.value == meal.id) selectedMealId.value = null
+            if (selectedMealIdFlow.value == meal.id) selectedMealIdFlow.value = null
         }
     }
 

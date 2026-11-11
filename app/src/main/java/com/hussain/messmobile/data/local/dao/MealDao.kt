@@ -31,6 +31,12 @@ interface MealDao {
 
     @Query("DELETE FROM meals WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM meals")
+    suspend fun deleteAll()
+
+    @Insert
+    suspend fun insertAll(items: List<MealEntity>)
 }
 
 @Dao
@@ -60,11 +66,8 @@ interface MealEntryDao {
     @Query("DELETE FROM meal_entries WHERE mealId = :mealId AND memberId = :memberId")
     suspend fun delete(mealId: Long, memberId: Long)
 
-    @Query("DELETE FROM meals")
-    suspend fun deleteAll()
 
-    @Insert
-    suspend fun insertAll(items: List<MealEntity>)
+
 
 
     @Query("DELETE FROM meal_entries")
@@ -72,5 +75,4 @@ interface MealEntryDao {
 
     @Insert
     suspend fun insertAll(items: List<MealEntryEntity>)
-
 }

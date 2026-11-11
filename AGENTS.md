@@ -17,8 +17,9 @@ Gradle, AGP, Kotlin and the AndroidX libraries are pinned in `gradle/libs.versio
   The Kotlin Gradle plugin version is pinned through `buildscript { classpath(...) }` in the root
   `build.gradle.kts` and has to stay in sync with `libs.versions.toml`.
 - Every AndroidX dependency declares a `minCompileSdk` in its AAR metadata. The app compiles
-  against SDK 36, so a dependency that requires 37+ breaks the build. Check
-  `META-INF/com/android/build/gradle/aar-metadata.properties` before bumping a version.
+  against SDK 37 (`compileSdk = 37`, `compileSdkMinor = 0`), so a dependency that requires 38+
+  breaks the build. Check `META-INF/com/android/build/gradle/aar-metadata.properties` before
+  bumping a version. `targetSdk` stays at 36, that is what the Play Store asks for today.
 - Room is processed with KSP, the KSP version is independent of the Kotlin version but has to
   support the Kotlin compiler that is used.
 
@@ -52,9 +53,9 @@ Use the Gradle wrapper, never a system Gradle. JDK 17 is the reference JDK.
 
 - The database is the single source of truth. Screens read from the repository flows and write
   through the view models, never through a DAO.
-- Never commit a keystore, a password or any other signing material. The release build reads
-  them from environment variables (`ANDROID_KEYSTORE_*`) or from `~/.gradle/gradle.properties`
-  (`MESS_UPLOAD_*`).
+- Never commit a keystore, a password or any other signing material. Gradle builds the release
+  APK unsigned, the CI signs it with `apksigner` and the secrets (`ANDROID_KEYSTORE_*`) only
+  exist in the workflow.
 - The release APK is built by CI (`.github/workflows/release.yml`), not on a developer machine.
   Keep the workflow in sync with `compileSdk`/`buildToolsVersion` changes.
 - The backup format is a public contract: it has to stay readable by every version of the app.
