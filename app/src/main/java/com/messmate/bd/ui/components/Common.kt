@@ -10,11 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -23,8 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.messmate.bd.R
 
 /**
  * A titled card – the basic building block of every screen.
@@ -268,4 +273,29 @@ fun LabeledField(
         supportingText = supportingText?.let { { Text(it) } },
         modifier = modifier.fillMaxWidth(),
     )
+}
+
+/**
+ * The actions of the app bar – the audit log and the settings.
+ *
+ * Every screen shows them, otherwise the settings (language, cut-offs, month
+ * end) and the audit log would be unreachable.
+ */
+@Composable
+fun TopBarActions(
+    onOpenAudit: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    IconButton(onClick = onOpenAudit) {
+        Icon(
+            imageVector = Icons.Outlined.History,
+            contentDescription = stringResource(R.string.audit_title),
+        )
+    }
+    IconButton(onClick = onOpenSettings) {
+        Icon(
+            imageVector = Icons.Outlined.Settings,
+            contentDescription = stringResource(R.string.settings_title),
+        )
+    }
 }

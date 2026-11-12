@@ -31,11 +31,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,6 +59,7 @@ import com.messmate.bd.domain.model.DepositStatus
 import com.messmate.bd.domain.model.Member
 import com.messmate.bd.ui.components.LabeledField
 import com.messmate.bd.ui.components.SectionCard
+import com.messmate.bd.ui.components.TopBarActions
 import com.messmate.bd.ui.util.Formatters
 import com.messmate.bd.ui.util.QrCodeGenerator
 
@@ -65,6 +70,8 @@ import com.messmate.bd.ui.util.QrCodeGenerator
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MembersScreen(
+    onOpenAudit: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MembersViewModel = hiltViewModel(),
 ) {
@@ -72,6 +79,18 @@ fun MembersScreen(
     val statements by viewModel.statements.collectAsStateWithLifecycle()
     val deposits by viewModel.deposits.collectAsStateWithLifecycle()
     val mess by viewModel.mess.collectAsStateWithLifecycle()
+    val isManager by viewModel.isManager.collectAsStateWithLifecycle()
+
+    // Errors of the repository are shown as a snackbar – they are the only
+    // feedback the user gets when a write fails (for example offline).
+    val event by viewModel.events.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(event) {
+        event?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.consumeEvent()
+        }
+    }
 
     var addDialogVisible by remember { mutableStateOf(false) }
     var depositDialogVisible by remember { mutableStateOf(false) }
@@ -79,6 +98,7 @@ fun MembersScreen(
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.members_title)) },
@@ -86,6 +106,7 @@ fun MembersScreen(
                     IconButton(onClick = { qrDialogVisible = true }) {
                         Icon(Icons.Outlined.QrCode2, contentDescription = stringResource(R.string.members_invite_qr))
                     }
+                    TopBarActions(onOpenAudit = onOpenAudit, onOpenSettings = onOpenSettings)
                 },
             )
         },
@@ -114,6 +135,7 @@ fun MembersScreen(
                                 balance = statements.firstOrNull { it.member.memberId == member.memberId }
                                     ?.netBalance
                                     ?: 0.0,
+                                isManager = isManager,
                                 onSeatRentChange = { viewModel.updateSeatRent(member.memberId, it) },
                             )
                         }
@@ -141,6 +163,7 @@ fun MembersScreen(
                             deposits.forEach { deposit ->
                                 DepositRow(
                                     deposit = deposit,
+                                    isManager = isManager,
                                     onVerify = { viewModel.resolveDeposit(deposit.depositId, true) },
                                     onReject = { viewModel.resolveDeposit(deposit.depositId, false) },
                                 )
@@ -186,16 +209,18 @@ fun MembersScreen(
 
 /**
  * One member with the seat rent and the balance.
+ *
+ * Tapping the rent opens the edit dialog – the rent is written to the sheet
+ * with a single cell update.
  */
 @Composable
 private fun MemberRow(
     member: Member,
     balance: Double,
+    isManager: Boolean,
     onSeatRentChange: (Double) -> Unit,
 ) {
-    var seatRent by remember(member.memberId, member.seatRent) {
-        mutableStateOf(member.seatRent.takeIf { it > 0 }?.toInt()?.toString().orEmpty())
-    }
+    var editDialogVisible by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -213,15 +238,61 @@ private fun MemberRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        OutlinedButton(
-            onClick = {
-                val value = seatRent.toDoubleOrNull() ?: 0.0
-                onSeatRentChange(value)
-            },
-        ) {
-            Text(text = seatRent.ifEmpty { "0" } + " ৳")
+        if (isManager) {
+            OutlinedButton(onClick = { editDialogVisible = true }) {
+                Text(text = Formatters.money(member.seatRent))
+            }
+        } else {
+            Text(text = Formatters.money(member.seatRent))
         }
     }
+
+    if (editDialogVisible) {
+        SeatRentDialog(
+            member = member,
+            onDismiss = { editDialogVisible = false },
+            onConfirm = { rent ->
+                onSeatRentChange(rent)
+                editDialogVisible = false
+            },
+        )
+    }
+}
+
+/**
+ * The dialog that changes the seat rent of a member.
+ */
+@Composable
+private fun SeatRentDialog(
+    member: Member,
+    onDismiss: () -> Unit,
+    onConfirm: (Double) -> Unit,
+) {
+    var seatRent by remember(member.memberId) {
+        mutableStateOf(member.seatRent.takeIf { it > 0 }?.toInt()?.toString().orEmpty())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("${member.name} · ${stringResource(R.string.utilities_seat_rent)}") },
+        text = {
+            LabeledField(
+                value = seatRent,
+                onValueChange = { seatRent = it.filter { char -> char.isDigit() || char == '.' } },
+                label = stringResource(R.string.utilities_seat_rent),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(seatRent.toDoubleOrNull() ?: 0.0) },
+                enabled = (seatRent.toDoubleOrNull() ?: 0.0) >= 0.0,
+            ) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
 }
 
 /**
@@ -230,6 +301,7 @@ private fun MemberRow(
 @Composable
 private fun DepositRow(
     deposit: Deposit,
+    isManager: Boolean,
     onVerify: () -> Unit,
     onReject: () -> Unit,
 ) {
@@ -250,7 +322,7 @@ private fun DepositRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (deposit.status == DepositStatus.PENDING) {
+        if (deposit.status == DepositStatus.PENDING && isManager) {
             IconButton(onClick = onVerify) {
                 Icon(Icons.Outlined.Check, contentDescription = stringResource(R.string.deposits_verify))
             }

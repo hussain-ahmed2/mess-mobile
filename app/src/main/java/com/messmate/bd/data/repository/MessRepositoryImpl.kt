@@ -468,7 +468,7 @@ class MessRepositoryImpl @Inject constructor(
         }
 
         // 2. Audit entry (visible immediately, appended to the sheet on flush).
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = if (role == Role.MANAGER) ActionType.MEAL_OVERRIDDEN else ActionType.MEAL_UPDATED,
             details = "$memberId · ${mealType.name.lowercase()} · ${if (enabled) "on" else "off"} · $date",
@@ -484,6 +484,7 @@ class MessRepositoryImpl @Inject constructor(
                 mealType = mealType.name,
                 enabled = enabled,
             ),
+            auditId,
         )
         flushQueue()
     }
@@ -523,7 +524,7 @@ class MessRepositoryImpl @Inject constructor(
             ),
         )
 
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.MEAL_UPDATED,
             details = "$memberId · $count guest meal(s) · $date",
@@ -537,6 +538,7 @@ class MessRepositoryImpl @Inject constructor(
                 date = date.toString(),
                 count = count.coerceAtLeast(0),
             ),
+            auditId,
         )
         flushQueue()
     }
@@ -566,7 +568,7 @@ class MessRepositoryImpl @Inject constructor(
             ),
         )
 
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.BAZAR_ADDED,
             details = "৳${entry.amount} · ${entry.items}",
@@ -584,12 +586,16 @@ class MessRepositoryImpl @Inject constructor(
                 loggedBy = entry.loggedBy.ifBlank { actor },
                 timestamp = entry.timestamp.ifBlank { stamp },
             ),
+            auditId,
         )
         flushQueue()
     }
 
     override suspend fun addUtilityBill(bill: UtilityBill): Result<Unit> = resultOf {
         val sheetId = requireSheetId()
+        // The fixed costs are the manager's job – members only log bazar and
+        // deposits.
+        check(currentRole() == Role.MANAGER) { "Only the manager can add a bill." }
         val stamp = nowIso()
         val actor = currentEmail()
 
@@ -609,7 +615,7 @@ class MessRepositoryImpl @Inject constructor(
             ),
         )
 
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.UTILITY_ADDED,
             details = "${bill.category.sheetValue} · ৳${bill.amount} · ${bill.splitType.sheetValue}",
@@ -627,6 +633,7 @@ class MessRepositoryImpl @Inject constructor(
                 targetMemberId = bill.targetMemberId,
                 notes = bill.notes,
             ),
+            auditId,
         )
         flushQueue()
     }
@@ -652,7 +659,7 @@ class MessRepositoryImpl @Inject constructor(
             ),
         )
 
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.DEPOSIT_LOGGED,
             details = "$deposit.memberId · ৳${deposit.amount} · ${deposit.method.sheetValue}",
@@ -670,6 +677,7 @@ class MessRepositoryImpl @Inject constructor(
                 trxId = deposit.trxId,
                 status = deposit.status.sheetValue,
             ),
+            auditId,
         )
         flushQueue()
     }
@@ -684,7 +692,7 @@ class MessRepositoryImpl @Inject constructor(
 
         val stamp = nowIso()
         val actor = currentEmail()
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = if (approve) ActionType.DEPOSIT_VERIFIED else ActionType.DEPOSIT_REJECTED,
             details = "$depositId · $status",
@@ -692,7 +700,7 @@ class MessRepositoryImpl @Inject constructor(
             stamp = stamp,
         )
 
-        enqueue(OutboxPayload.SetDepositStatus(depositId = depositId, status = status))
+        enqueue(OutboxPayload.SetDepositStatus(depositId = depositId, status = status), auditId)
         flushQueue()
     }
 
@@ -747,7 +755,7 @@ class MessRepositoryImpl @Inject constructor(
 
         val stamp = nowIso()
         val actor = currentEmail()
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.MEMBER_ADDED,
             details = "$memberId · ${member.name} · ${member.gmail}",
@@ -764,6 +772,7 @@ class MessRepositoryImpl @Inject constructor(
                 seatRent = member.seatRent,
                 prevBalance = member.prevBalance,
             ),
+            auditId,
         )
         flushQueue()
     }
@@ -777,7 +786,7 @@ class MessRepositoryImpl @Inject constructor(
 
         val stamp = nowIso()
         val actor = currentEmail()
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.MEMBER_UPDATED,
             details = "$memberId · seat rent ৳$seatRent",
@@ -785,7 +794,7 @@ class MessRepositoryImpl @Inject constructor(
             stamp = stamp,
         )
 
-        enqueue(OutboxPayload.SetSeatRent(memberId = memberId, seatRent = seatRent))
+        enqueue(OutboxPayload.SetSeatRent(memberId = memberId, seatRent = seatRent), auditId)
         flushQueue()
     }
 
@@ -803,7 +812,7 @@ class MessRepositoryImpl @Inject constructor(
 
             val stamp = nowIso()
             val actor = currentEmail()
-            writeAuditLocally(
+            val auditId = writeAuditLocally(
                 sheetId = sheetId,
                 action = ActionType.MEMBER_UPDATED,
                 details = "$memberId · ${if (active) "activated" else "deactivated"}",
@@ -811,7 +820,7 @@ class MessRepositoryImpl @Inject constructor(
                 stamp = stamp,
             )
 
-            enqueue(OutboxPayload.SetMemberActive(memberId = memberId, active = active))
+            enqueue(OutboxPayload.SetMemberActive(memberId = memberId, active = active), auditId)
             flushQueue()
         }
 
@@ -831,31 +840,34 @@ class MessRepositoryImpl @Inject constructor(
         val stamp = nowIso()
         val actor = currentEmail()
 
+        val auditId = writeAuditLocally(
+            sheetId = sheetId,
+            action = ActionType.CONFIG_UPDATED,
+            details = "Cut-offs: $breakfast / $lunch / $dinner",
+            actor = actor,
+            stamp = stamp,
+        )
+
         enqueue(
             OutboxPayload.SetConfigValue(
                 SheetSchema.Config.KEY_BREAKFAST_CUTOFF,
                 breakfast.format(DateTimeFormatter.ofPattern("HH:mm")),
             ),
+            auditId,
         )
         enqueue(
             OutboxPayload.SetConfigValue(
                 SheetSchema.Config.KEY_LUNCH_CUTOFF,
                 lunch.format(DateTimeFormatter.ofPattern("HH:mm")),
             ),
+            auditId,
         )
         enqueue(
             OutboxPayload.SetConfigValue(
                 SheetSchema.Config.KEY_DINNER_CUTOFF,
                 dinner.format(DateTimeFormatter.ofPattern("HH:mm")),
             ),
-        )
-
-        writeAuditLocally(
-            sheetId = sheetId,
-            action = ActionType.CONFIG_UPDATED,
-            details = "Cut-offs: $breakfast / $lunch / $dinner",
-            actor = actor,
-            stamp = stamp,
+            auditId,
         )
 
         flushQueue()
@@ -870,19 +882,20 @@ class MessRepositoryImpl @Inject constructor(
         val stamp = nowIso()
         val actor = currentEmail()
 
-        enqueue(
-            OutboxPayload.SetConfigValue(
-                SheetSchema.Config.KEY_BREAKFAST_WEIGHT,
-                weight.toString(),
-            ),
-        )
-
-        writeAuditLocally(
+        val auditId = writeAuditLocally(
             sheetId = sheetId,
             action = ActionType.CONFIG_UPDATED,
             details = "Breakfast weight: $weight",
             actor = actor,
             stamp = stamp,
+        )
+
+        enqueue(
+            OutboxPayload.SetConfigValue(
+                SheetSchema.Config.KEY_BREAKFAST_WEIGHT,
+                weight.toString(),
+            ),
+            auditId,
         )
 
         flushQueue()
@@ -947,12 +960,19 @@ class MessRepositoryImpl @Inject constructor(
     // Outbox
     // =======================================================================
 
-    /** Puts an operation into the durable queue. */
-    private suspend fun enqueue(payload: OutboxPayload) {
-        val sheetId = activeSheetId() ?: return
+    /**
+     * Puts an operation into the durable queue.
+     *
+     * @return the id of the queued operation. It is also used as the id of the
+     *         audit entry, so the optimistic entry in the cache and the row in
+     *         the sheet are the same record (no duplicates after a sync).
+     */
+    private suspend fun enqueue(payload: OutboxPayload, logId: String): String {
+        val sheetId = activeSheetId() ?: return logId
+        val operationId = logId
         pendingOperationDao.upsert(
             PendingOperationEntity(
-                id = UUID.randomUUID().toString(),
+                id = operationId,
                 spreadsheetId = sheetId,
                 type = payload::class.simpleName ?: "Operation",
                 payload = json.encodeToString(payload),
@@ -962,6 +982,7 @@ class MessRepositoryImpl @Inject constructor(
                 lastError = null,
             ),
         )
+        return operationId
     }
 
     /**
@@ -1000,6 +1021,7 @@ class MessRepositoryImpl @Inject constructor(
                     actorEmail = actor,
                     actionType = auditActionFor(payload),
                     details = auditDetailsFor(payload),
+                    logId = operation.id,
                 )
                 pendingOperationDao.delete(operation.id)
             } catch (error: Exception) {
@@ -1071,13 +1093,14 @@ class MessRepositoryImpl @Inject constructor(
         details: String,
         actor: String,
         stamp: String,
-    ) {
+        logId: String = UUID.randomUUID().toString(),
+    ): String {
         val nextRow = (auditLogDao.getAuditLog(sheetId).maxOfOrNull { it.sheetRow } ?: 1) + 1
         auditLogDao.upsertAuditLog(
             listOf(
                 AuditRecordEntity(
                     spreadsheetId = sheetId,
-                    logId = UUID.randomUUID().toString(),
+                    logId = logId,
                     timestamp = stamp,
                     actorEmail = actor,
                     actionType = action,
@@ -1086,6 +1109,7 @@ class MessRepositoryImpl @Inject constructor(
                 ),
             ),
         )
+        return logId
     }
 
     private fun auditActionFor(payload: OutboxPayload): ActionType = when (payload) {

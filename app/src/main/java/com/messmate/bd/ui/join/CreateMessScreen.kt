@@ -124,7 +124,7 @@ fun CreateMessScreen(
                         FilterChip(
                             selected = state.month == month,
                             onClick = { viewModel.onMonthChange(month) },
-                            label = { Text(Formatters.month(month)) },
+                            label = { Text(Formatters.monthKey(month)) },
                         )
                     }
                 }

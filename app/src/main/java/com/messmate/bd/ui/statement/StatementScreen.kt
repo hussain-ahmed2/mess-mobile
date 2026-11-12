@@ -21,10 +21,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +42,7 @@ import com.messmate.bd.R
 import com.messmate.bd.domain.model.MemberStatement
 import com.messmate.bd.ui.components.EmptyState
 import com.messmate.bd.ui.components.SectionCard
+import com.messmate.bd.ui.components.TopBarActions
 import com.messmate.bd.ui.util.Formatters
 
 /**
@@ -46,6 +51,8 @@ import com.messmate.bd.ui.util.Formatters
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatementScreen(
+    onOpenAudit: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: StatementViewModel = hiltViewModel(),
 ) {
@@ -53,8 +60,20 @@ fun StatementScreen(
     val config by viewModel.config.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // Errors of the repository are shown as a snackbar – they are the only
+    // feedback the user gets when a write fails (for example offline).
+    val event by viewModel.events.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(event) {
+        event?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.consumeEvent()
+        }
+    }
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -73,6 +92,7 @@ fun StatementScreen(
                     IconButton(onClick = { viewModel.exportPdf(context) }) {
                         Icon(Icons.Outlined.PictureAsPdf, contentDescription = stringResource(R.string.action_export_pdf))
                     }
+                    TopBarActions(onOpenAudit = onOpenAudit, onOpenSettings = onOpenSettings)
                 },
             )
         },

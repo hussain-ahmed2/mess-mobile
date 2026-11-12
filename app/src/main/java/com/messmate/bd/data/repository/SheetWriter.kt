@@ -68,13 +68,14 @@ class SheetWriter @Inject constructor(
         actorEmail: String,
         actionType: ActionType,
         details: String,
+        logId: String = UUID.randomUUID().toString(),
     ) {
         sheetsGateway.appendRows(
             spreadsheetId = spreadsheetId,
             tab = Tabs.AUDIT,
             rows = listOf(
                 listOf(
-                    UUID.randomUUID().toString(),
+                    logId,
                     OffsetDateTime.now(clock).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                     actorEmail,
                     actionType.sheetValue,

@@ -123,11 +123,36 @@ private fun MainGraph(navController: NavHostController) {
             startDestination = Destination.Home.route,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Destination.Home.route) { HomeScreen() }
-            composable(Destination.Bazar.route) { BazarScreen() }
-            composable(Destination.Utilities.route) { UtilitiesScreen() }
-            composable(Destination.Members.route) { MembersScreen() }
-            composable(Destination.Statement.route) { StatementScreen() }
+            composable(Destination.Home.route) {
+                HomeScreen(
+                    onOpenAudit = { navController.navigate(Destination.Audit.route) },
+                    onOpenSettings = { navController.navigate(Destination.Settings.route) },
+                )
+            }
+            composable(Destination.Bazar.route) {
+                BazarScreen(
+                    onOpenAudit = { navController.navigate(Destination.Audit.route) },
+                    onOpenSettings = { navController.navigate(Destination.Settings.route) },
+                )
+            }
+            composable(Destination.Utilities.route) {
+                UtilitiesScreen(
+                    onOpenAudit = { navController.navigate(Destination.Audit.route) },
+                    onOpenSettings = { navController.navigate(Destination.Settings.route) },
+                )
+            }
+            composable(Destination.Members.route) {
+                MembersScreen(
+                    onOpenAudit = { navController.navigate(Destination.Audit.route) },
+                    onOpenSettings = { navController.navigate(Destination.Settings.route) },
+                )
+            }
+            composable(Destination.Statement.route) {
+                StatementScreen(
+                    onOpenAudit = { navController.navigate(Destination.Audit.route) },
+                    onOpenSettings = { navController.navigate(Destination.Settings.route) },
+                )
+            }
             composable(Destination.Audit.route) { AuditScreen() }
             composable(Destination.Settings.route) {
                 SettingsScreen(onOpenAudit = { navController.navigate(Destination.Audit.route) })

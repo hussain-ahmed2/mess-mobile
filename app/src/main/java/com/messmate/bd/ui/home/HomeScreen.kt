@@ -12,22 +12,29 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudSync
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Fastfood
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.ShoppingBasket
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +48,7 @@ import com.messmate.bd.domain.model.MealType
 import com.messmate.bd.ui.components.InfoBanner
 import com.messmate.bd.ui.components.SectionCard
 import com.messmate.bd.ui.components.StatCard
+import com.messmate.bd.ui.components.TopBarActions
 import com.messmate.bd.ui.util.Formatters
 import java.time.LocalDate
 
@@ -51,13 +59,26 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onOpenAudit: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // Failed writes are reported as a snackbar.
+    val event by viewModel.events.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(event) {
+        (event as? HomeEvent.Message)?.let { message ->
+            snackbarHostState.showSnackbar(message.text)
+            viewModel.consumeEvent()
+        }
+    }
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -74,6 +95,7 @@ fun HomeScreen(
                     IconButton(onClick = viewModel::refresh) {
                         Icon(Icons.Outlined.CloudSync, contentDescription = null)
                     }
+                    TopBarActions(onOpenAudit = onOpenAudit, onOpenSettings = onOpenSettings)
                 },
             )
         },
@@ -128,7 +150,11 @@ fun HomeScreen(
                     date = LocalDate.now(),
                     toggles = state.today,
                     isManager = state.isManager,
+                    isLocked = state.isLocked,
                     onToggle = { type, enabled -> viewModel.toggleMeal(LocalDate.now(), type, enabled) },
+                    onGuestMealsChange = { count ->
+                        viewModel.setGuestMeals(LocalDate.now(), count)
+                    },
                 )
             }
 
@@ -138,8 +164,12 @@ fun HomeScreen(
                     date = LocalDate.now().plusDays(1),
                     toggles = state.tomorrow,
                     isManager = state.isManager,
+                    isLocked = state.isLocked,
                     onToggle = { type, enabled ->
                         viewModel.toggleMeal(LocalDate.now().plusDays(1), type, enabled)
+                    },
+                    onGuestMealsChange = { count ->
+                        viewModel.setGuestMeals(LocalDate.now().plusDays(1), count)
                     },
                 )
             }
@@ -216,7 +246,9 @@ private fun MealSection(
     date: LocalDate,
     toggles: List<MealToggleUi>,
     isManager: Boolean,
+    isLocked: Boolean,
     onToggle: (MealType, Boolean) -> Unit,
+    onGuestMealsChange: (Int) -> Unit,
 ) {
     SectionCard(
         title = title,
@@ -230,6 +262,55 @@ private fun MealSection(
                     onToggle = { onToggle(toggle.type, it) },
                 )
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Guest meals are charged to the member that hosts them – they
+            // count as full meals in the meal rate.
+            GuestMealsRow(
+                count = toggles.firstOrNull()?.guestMeals ?: 0,
+                enabled = !isLocked,
+                onCountChange = onGuestMealsChange,
+            )
+        }
+    }
+}
+
+/**
+ * The stepper that sets the number of guest meals.
+ */
+@Composable
+private fun GuestMealsRow(
+    count: Int,
+    enabled: Boolean,
+    onCountChange: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.guest_meals),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        IconButton(
+            onClick = { onCountChange((count - 1).coerceAtLeast(0)) },
+            enabled = enabled && count > 0,
+        ) {
+            Icon(Icons.Outlined.Remove, contentDescription = null)
+        }
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        IconButton(
+            onClick = { onCountChange(count + 1) },
+            enabled = enabled,
+        ) {
+            Icon(Icons.Outlined.Add, contentDescription = null)
         }
     }
 }

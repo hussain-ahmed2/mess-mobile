@@ -57,6 +57,15 @@ class UtilitiesViewModel @Inject constructor(
             initialValue = 0.0,
         )
 
+    /** `true` when the signed-in user manages the mess. */
+    val isManager: StateFlow<Boolean> = messRepository.observeMess()
+        .map { it?.isManager == true }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false,
+        )
+
     private val _events = MutableStateFlow<String?>(null)
     val events: StateFlow<String?> = _events.asStateFlow()
 

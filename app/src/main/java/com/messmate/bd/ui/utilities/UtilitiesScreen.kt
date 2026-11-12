@@ -21,11 +21,15 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +47,7 @@ import com.messmate.bd.domain.model.UtilityCategory
 import com.messmate.bd.ui.components.EmptyState
 import com.messmate.bd.ui.components.LabeledField
 import com.messmate.bd.ui.components.StatCard
+import com.messmate.bd.ui.components.TopBarActions
 import com.messmate.bd.ui.util.Formatters
 
 /**
@@ -51,6 +56,8 @@ import com.messmate.bd.ui.util.Formatters
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun UtilitiesScreen(
+    onOpenAudit: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: UtilitiesViewModel = hiltViewModel(),
 ) {
@@ -58,16 +65,37 @@ fun UtilitiesScreen(
     val members by viewModel.members.collectAsStateWithLifecycle()
     val equalTotal by viewModel.equalTotal.collectAsStateWithLifecycle()
     val customTotal by viewModel.customTotal.collectAsStateWithLifecycle()
+    val isManager by viewModel.isManager.collectAsStateWithLifecycle()
+
+    // Errors of the repository are shown as a snackbar – they are the only
+    // feedback the user gets when a write fails (for example offline).
+    val event by viewModel.events.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(event) {
+        event?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.consumeEvent()
+        }
+    }
     var dialogVisible by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.utilities_title)) })
+            TopAppBar(
+                title = { Text(stringResource(R.string.utilities_title)) },
+                actions = {
+                    TopBarActions(onOpenAudit = onOpenAudit, onOpenSettings = onOpenSettings)
+                },
+            )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { dialogVisible = true }) {
-                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_bill))
+            // Only the manager logs the fixed costs.
+            if (isManager) {
+                FloatingActionButton(onClick = { dialogVisible = true }) {
+                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_bill))
+                }
             }
         },
     ) { innerPadding ->
