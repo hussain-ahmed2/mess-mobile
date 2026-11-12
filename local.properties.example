@@ -1,0 +1,10 @@
+# Copy this file to `local.properties` and fill in your values.
+# `local.properties` is ignored by git – it never leaves your machine.
+
+# Android SDK location (Android Studio writes this automatically)
+sdk.dir=/path/to/Android/Sdk
+
+# OAuth "Web" client id of your Google Cloud project (client_type = 3).
+# Used by Credential Manager "Sign in with Google" to mint access tokens for
+# the Drive / Sheets REST APIs.
+MESSMATE_SERVER_CLIENT_ID=your-client-id.apps.googleusercontent.com

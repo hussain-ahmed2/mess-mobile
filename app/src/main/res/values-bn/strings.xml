@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">মেসমেট বিডি</string>
+
+    <!-- ============ Onboarding / auth ============ -->
+    <string name="onboarding_title">মেসমেট বিডি</string>
+    <string name="onboarding_tagline">নিজের গুগল শিটেই মেস চালান — সবার জন্য স্বচ্ছ হিসাব।</string>
+    <string name="action_sign_in_with_google">গুগল দিয়ে চালিয়ে যান</string>
+    <string name="action_create_mess">নতুন মেস তৈরি করুন</string>
+    <string name="action_join_mess">পুরানো মেসে যোগ দিন</string>
+    <string name="join_hint_sheet_id">মেস শিট আইডি লিখুন</string>
+    <string name="join_hint_qr">ম্যানেজারের QR কোড স্ক্যান করুন</string>
+    <string name="join_pick_from_drive">ড্রাইভ থেকে শিট বেছে নিন</string>
+    <string name="auth_scope_explainer">মেসমেট শুধু আপনার বেছে নেওয়া বা তৈরি করা ফাইলে প্রবেশাধিকার চায়। আপনার অন্য ড্রাইভ ফাইল কখনোই পড়তে পারবে না।</string>
+
+    <!-- ============ Common ============ -->
+    <string name="action_save">সংরক্ষণ</string>
+    <string name="action_cancel">বাতিল</string>
+    <string name="action_delete">মুছুন</string>
+    <string name="action_add">যোগ করুন</string>
+    <string name="action_retry">আবার চেষ্টা করুন</string>
+    <string name="action_refresh">রিফ্রেশ</string>
+    <string name="action_back">ফিরে যান</string>
+    <string name="action_next">পরবর্তী</string>
+    <string name="action_done">সম্পন্ন</string>
+    <string name="action_share">শেয়ার</string>
+    <string name="action_export_pdf">পিডিএফ রপ্তানি</string>
+    <string name="label_loading">লোড হচ্ছে…</string>
+    <string name="label_empty">এখনো কিছু নেই</string>
+    <string name="label_offline">আপনি অফলাইন। পরিবর্তনগুলো নিজে থেকেই সিঙ্ক হবে।</string>
+    <string name="label_syncing">সিঙ্ক হচ্ছে…</string>
+    <string name="label_synced">সিঙ্ক হয়েছে</string>
+    <string name="label_pending_sync">%1$d টি পরিবর্তন সিঙ্কের অপেক্ষায়</string>
+    <string name="currency_symbol">৳</string>
+
+    <!-- ============ Navigation ============ -->
+    <string name="nav_home">হোম</string>
+    <string name="nav_bazar">বাজার</string>
+    <string name="nav_utilities">ইউটিলিটি</string>
+    <string name="nav_members">সদস্য</string>
+    <string name="nav_statement">হিসাব</string>
+    <string name="nav_audit">অডিট লগ</string>
+
+    <!-- ============ Dashboard ============ -->
+    <string name="dashboard_live_meal_rate">বর্তমান খাবারের দর</string>
+    <string name="dashboard_meal_rate_value">প্রতি খাবার ৳%1$s</string>
+    <string name="dashboard_meal_rate_hint">এই মাসে এখন পর্যন্ত %1$s খাবার</string>
+    <string name="dashboard_total_bazar">মোট বাজার</string>
+    <string name="dashboard_my_balance">আমার বাকি</string>
+    <string name="dashboard_balance_credit">আপনার পাওনা ৳%1$s</string>
+    <string name="dashboard_balance_due">আপনাকে দিতে হবে ৳%1$s</string>
+    <string name="dashboard_balance_settled">আপনার হিসাব সমন্বয়</string>
+    <string name="dashboard_today_meals">আজকের খাবার</string>
+    <string name="dashboard_tomorrow_meals">আগামীকালের খাবার</string>
+    <string name="meal_breakfast">নাস্তা</string>
+    <string name="meal_lunch">দুপুরের খাবার</string>
+    <string name="meal_dinner">রাতের খাবার</string>
+    <string name="meal_guest">অতিথি</string>
+    <string name="meal_countdown">বন্ধ হবে %1$s পরে</string>
+    <string name="meal_locked">বন্ধ</string>
+    <string name="meal_locked_hint">সময় শেষ। শুধু ম্যানেজার পরিবর্তন করতে পারবেন।</string>
+    <string name="meal_weight_hint">নাস্তা %1$s খাবার হিসেবে গোনা হয়</string>
+
+    <!-- ============ Bazar ============ -->
+    <string name="bazar_title">বাজার খতিয়ান</string>
+    <string name="bazar_add">বাজার যোগ করুন</string>
+    <string name="bazar_field_items">কী কী কিনলেন?</string>
+    <string name="bazar_field_amount">পরিমাণ</string>
+    <string name="bazar_field_shopper">কে কিনেছে</string>
+    <string name="bazar_field_date">তারিখ</string>
+    <string name="bazar_total">মোট বাজার</string>
+    <string name="bazar_empty_hint">এখনো কোনো বাজার লেখা হয়নি।</string>
+
+    <!-- ============ Utilities & rent ============ -->
+    <string name="utilities_title">ইউটিলিটি ও ভাড়া</string>
+    <string name="utilities_add">বিল যোগ করুন</string>
+    <string name="utilities_category">খাত</string>
+    <string name="utilities_split_type">ভাগের ধরন</string>
+    <string name="utilities_split_equal">সবার মধ্যে সমানভাবে</string>
+    <string name="utilities_split_custom">একজন সদস্যকে চার্জ</string>
+    <string name="utilities_target_member">যাকে চার্জ করবেন</string>
+    <string name="utilities_notes">নোট</string>
+    <string name="utilities_total_equal">সমান ইউটিলিটি</string>
+    <string name="utilities_seat_rent">বসার ভাড়া</string>
+    <string name="cat_cook">রান্না / খালা / বুয়া</string>
+    <string name="cat_electricity">বিদ্যুৎ</string>
+    <string name="cat_gas">গ্যাস</string>
+    <string name="cat_wifi">ওয়াই-ফাই</string>
+    <string name="cat_water">পানি</string>
+    <string name="cat_garbage">ময়লা</string>
+    <string name="cat_other">অন্যান্য</string>
+
+    <!-- ============ Members & deposits ============ -->
+    <string name="members_title">সদস্য</string>
+    <string name="members_add">সদস্য যোগ করুন</string>
+    <string name="members_invite">আমন্ত্রণ শেয়ার করুন</string>
+    <string name="members_invite_qr">আমন্ত্রণ QR কোড</string>
+    <string name="members_field_name">নাম</string>
+    <string name="members_field_gmail">জিমেইল ঠিকানা</string>
+    <string name="members_field_seat_rent">বসার ভাড়া</string>
+    <string name="members_role_manager">ম্যানেজার</string>
+    <string name="members_role_member">সদস্য</string>
+    <string name="members_active">সক্রিয়</string>
+    <string name="members_inactive">নিষ্ক্রিয়</string>
+    <string name="deposits_title">জমা</string>
+    <string name="deposits_add">জমা লিখুন</string>
+    <string name="deposits_field_amount">পরিমাণ</string>
+    <string name="deposits_field_method">মাধ্যম</string>
+    <string name="deposits_field_trx">ট্রানজেকশন আইডি</string>
+    <string name="deposits_verify">যাচাই</string>
+    <string name="deposits_pending">অপেক্ষমাণ</string>
+    <string name="deposits_verified">যাচাইকৃত</string>
+    <string name="deposits_rejected">বাতিল</string>
+    <string name="method_cash">নগদ</string>
+    <string name="method_bkash">বিকাশ</string>
+    <string name="method_nagad">নগদ (Nagad)</string>
+    <string name="method_rocket">রকেট</string>
+    <string name="method_bank">ব্যাংক</string>
+
+    <!-- ============ Statement / month end ============ -->
+    <string name="statement_title">মাসিক হিসাব</string>
+    <string name="statement_meals">মোট খাবার</string>
+    <string name="statement_meal_cost">খাবারের খরচ</string>
+    <string name="statement_seat_rent">বসার ভাড়া</string>
+    <string name="statement_equal_utility">সাধারণ ইউটিলিটি</string>
+    <string name="statement_custom_utility">ব্যক্তিগত চার্জ</string>
+    <string name="statement_total_cost">মোট খরচ</string>
+    <string name="statement_prev_balance">আগের মাসের বাকি</string>
+    <string name="statement_deposits">জমা</string>
+    <string name="statement_net_balance">নিট বাকি</string>
+    <string name="statement_settled">সমন্বিত</string>
+    <string name="month_close_title">মাস বন্ধ করুন</string>
+    <string name="month_close_hint">মাস বন্ধ করলে শিট লক হবে, নতুন মাসের শিট খুলবে এবং বাকির হিসাব এগিয়ে নেবে।</string>
+    <string name="month_close_confirm">মাস বন্ধ করে হস্তান্তর</string>
+    <string name="month_locked_banner">এই মাস বন্ধ ও লক করা হয়েছে।</string>
+
+    <!-- ============ Audit log ============ -->
+    <string name="audit_title">অডিট লগ</string>
+    <string name="audit_empty_hint">প্রতিটি পরিবর্তন এখানে লেখা হয়।</string>
+
+    <!-- ============ Settings ============ -->
+    <string name="settings_title">সেটিংস</string>
+    <string name="settings_language">ভাষা</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_bangla">বাংলা</string>
+    <string name="settings_cutoffs">খাবারের সময়সীমা</string>
+    <string name="settings_breakfast_weight">নাস্তার ওজন</string>
+    <string name="settings_sign_out">সাইন আউট</string>
+</resources>

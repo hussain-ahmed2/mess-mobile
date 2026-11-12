@@ -1,21 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-
-    <style name="Theme.MessMobile" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/background_light</item>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MessMate" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:windowBackground">@color/messmate_surface</item>
     </style>
-
-    <!--
-        Launch theme. `core-splashscreen` keeps the system splash on screen until the app
-        signals that it is ready, which is when the Compose splash overlay takes over.
-    -->
-    <style name="Theme.MessMobile.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
-        <item name="windowSplashScreenAnimationDuration">300</item>
-        <item name="postSplashScreenTheme">@style/Theme.MessMobile</item>
-    </style>
-
 </resources>

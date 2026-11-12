@@ -1,3 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">mess-mobile</string>
+    <string name="app_name">MessMate BD</string>
+
+    <!-- ============ Onboarding / auth ============ -->
+    <string name="onboarding_title">MessMate BD</string>
+    <string name="onboarding_tagline">Run your mess on your own Google Sheet — transparent for everyone.</string>
+    <string name="action_sign_in_with_google">Continue with Google</string>
+    <string name="action_create_mess">Create a new mess</string>
+    <string name="action_join_mess">Join an existing mess</string>
+    <string name="join_hint_sheet_id">Paste the Mess Sheet ID</string>
+    <string name="join_hint_qr">Scan the manager\'s QR code</string>
+    <string name="join_pick_from_drive">Choose the sheet from Drive</string>
+    <string name="auth_scope_explainer">MessMate only requests access to files you pick or create. It can never read your other Drive files.</string>
+
+    <!-- ============ Common ============ -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_add">Add</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
+    <string name="action_done">Done</string>
+    <string name="action_share">Share</string>
+    <string name="action_export_pdf">Export PDF</string>
+    <string name="label_loading">Loading…</string>
+    <string name="label_empty">Nothing here yet</string>
+    <string name="label_offline">You are offline. Changes will sync automatically.</string>
+    <string name="label_syncing">Syncing…</string>
+    <string name="label_synced">Synced</string>
+    <string name="label_pending_sync">%1$d change(s) waiting to sync</string>
+    <string name="currency_symbol">৳</string>
+
+    <!-- ============ Navigation ============ -->
+    <string name="nav_home">Home</string>
+    <string name="nav_bazar">Bazar</string>
+    <string name="nav_utilities">Utilities</string>
+    <string name="nav_members">Members</string>
+    <string name="nav_statement">Statement</string>
+    <string name="nav_audit">Audit log</string>
+
+    <!-- ============ Dashboard ============ -->
+    <string name="dashboard_live_meal_rate">Live meal rate</string>
+    <string name="dashboard_meal_rate_value">৳%1$s / meal</string>
+    <string name="dashboard_meal_rate_hint">%1$s meals so far this month</string>
+    <string name="dashboard_total_bazar">Total bazar</string>
+    <string name="dashboard_my_balance">My balance</string>
+    <string name="dashboard_balance_credit">You are owed ৳%1$s</string>
+    <string name="dashboard_balance_due">You owe ৳%1$s</string>
+    <string name="dashboard_balance_settled">You are settled up</string>
+    <string name="dashboard_today_meals">Today\'s meals</string>
+    <string name="dashboard_tomorrow_meals">Tomorrow\'s meals</string>
+    <string name="meal_breakfast">Breakfast</string>
+    <string name="meal_lunch">Lunch</string>
+    <string name="meal_dinner">Dinner</string>
+    <string name="meal_guest">Guest</string>
+    <string name="meal_countdown">Closes in %1$s</string>
+    <string name="meal_locked">Closed</string>
+    <string name="meal_locked_hint">The cutoff has passed. Only the manager can change this.</string>
+    <string name="meal_weight_hint">Breakfast counts as %1$s meal</string>
+
+    <!-- ============ Bazar ============ -->
+    <string name="bazar_title">Bazar ledger</string>
+    <string name="bazar_add">Add bazar trip</string>
+    <string name="bazar_field_items">What did you buy?</string>
+    <string name="bazar_field_amount">Amount</string>
+    <string name="bazar_field_shopper">Shopper</string>
+    <string name="bazar_field_date">Date</string>
+    <string name="bazar_total">Total bazar</string>
+    <string name="bazar_empty_hint">No market trips logged yet.</string>
+
+    <!-- ============ Utilities & rent ============ -->
+    <string name="utilities_title">Utilities &amp; rent</string>
+    <string name="utilities_add">Add bill</string>
+    <string name="utilities_category">Category</string>
+    <string name="utilities_split_type">Split</string>
+    <string name="utilities_split_equal">Split equally (everyone)</string>
+    <string name="utilities_split_custom">Charge one member</string>
+    <string name="utilities_target_member">Member to charge</string>
+    <string name="utilities_notes">Notes</string>
+    <string name="utilities_total_equal">Equal utilities</string>
+    <string name="utilities_seat_rent">Seat rent</string>
+    <string name="cat_cook">Cook / Khala / Bua</string>
+    <string name="cat_electricity">Electricity</string>
+    <string name="cat_gas">Gas</string>
+    <string name="cat_wifi">Wi-Fi</string>
+    <string name="cat_water">Water</string>
+    <string name="cat_garbage">Garbage / Moyla</string>
+    <string name="cat_other">Other</string>
+
+    <!-- ============ Members & deposits ============ -->
+    <string name="members_title">Members</string>
+    <string name="members_add">Add member</string>
+    <string name="members_invite">Share invite</string>
+    <string name="members_invite_qr">Invite QR code</string>
+    <string name="members_field_name">Name</string>
+    <string name="members_field_gmail">Gmail address</string>
+    <string name="members_field_seat_rent">Seat rent</string>
+    <string name="members_role_manager">Manager</string>
+    <string name="members_role_member">Member</string>
+    <string name="members_active">Active</string>
+    <string name="members_inactive">Inactive</string>
+    <string name="deposits_title">Deposits</string>
+    <string name="deposits_add">Log deposit</string>
+    <string name="deposits_field_amount">Amount</string>
+    <string name="deposits_field_method">Method</string>
+    <string name="deposits_field_trx">Transaction ID</string>
+    <string name="deposits_verify">Verify</string>
+    <string name="deposits_pending">Pending</string>
+    <string name="deposits_verified">Verified</string>
+    <string name="deposits_rejected">Rejected</string>
+    <string name="method_cash">Cash</string>
+    <string name="method_bkash">bKash</string>
+    <string name="method_nagad">Nagad</string>
+    <string name="method_rocket">Rocket</string>
+    <string name="method_bank">Bank</string>
+
+    <!-- ============ Statement / month end ============ -->
+    <string name="statement_title">Monthly statement</string>
+    <string name="statement_meals">Total meals</string>
+    <string name="statement_meal_cost">Meal cost</string>
+    <string name="statement_seat_rent">Seat rent</string>
+    <string name="statement_equal_utility">Shared utilities</string>
+    <string name="statement_custom_utility">Personal charges</string>
+    <string name="statement_total_cost">Total cost</string>
+    <string name="statement_prev_balance">Previous balance</string>
+    <string name="statement_deposits">Deposits</string>
+    <string name="statement_net_balance">Net balance</string>
+    <string name="statement_settled">Settled</string>
+    <string name="month_close_title">Close this month</string>
+    <string name="month_close_hint">Closing locks the sheet, opens next month\'s sheet and carries balances forward.</string>
+    <string name="month_close_confirm">Close month &amp; roll over</string>
+    <string name="month_locked_banner">This month is closed and locked.</string>
+
+    <!-- ============ Audit log ============ -->
+    <string name="audit_title">Audit log</string>
+    <string name="audit_empty_hint">Every change is recorded here.</string>
+
+    <!-- ============ Settings ============ -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_bangla">বাংলা</string>
+    <string name="settings_cutoffs">Meal cut-off times</string>
+    <string name="settings_breakfast_weight">Breakfast weight</string>
+    <string name="settings_sign_out">Sign out</string>
 </resources>

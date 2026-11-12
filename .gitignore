@@ -1,31 +1,16 @@
-# Gradle
+*.iml
 .gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-
-# Android
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
 local.properties
+/app/build/
+/build/
 *.apk
 *.aab
-*.ap_
-*.dex
-captures/
-.externalNativeBuild/
-.cxx/
-
-# Android Studio / IntelliJ IDEA
-.idea/
-*.iml
-*.hprof
-
-# Keystores and signing material, never commit these
-*.jks
 *.keystore
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# OS
-.DS_Store
-Thumbs.db
+!debug.keystore

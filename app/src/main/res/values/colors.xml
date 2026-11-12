@@ -1,11 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Splash screen background, matches the animated in-app splash overlay. -->
-    <color name="splash_background">#208AEF</color>
-
-    <!-- App backgrounds, light + dark. -->
-    <color name="background_light">#FFFFFF</color>
-    <color name="background_dark">#000000</color>
-
-    <!-- Accent used by the launcher icon gradient and the "link" text style. -->
-    <color name="link_primary">#3C87F7</color>
+    <color name="messmate_surface">#FFFBFF</color>
+    <color name="messmate_primary">#00696D</color>
+    <color name="messmate_secondary">#4A6365</color>
 </resources>

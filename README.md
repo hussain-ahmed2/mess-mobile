@@ -1,144 +1,229 @@
-# mess-mobile
+# MessMate BD
 
-A **native Android** mess manager written in **Kotlin** with **Jetpack Compose**.
+Native Android app for running a Bangladeshi Bachelor/Student **mess** on top of
+**your own Google Sheet**.
 
-Everything lives on the phone. There is no server, no account and no tracking: the app stores
-the mess in a local [Room](https://developer.android.com/training/data-storage/room) database and
-lets you save that data into a backup file, so you can continue where you left off after an
-uninstall or on another phone.
+There is no MessMate server. The mess manager creates a Google Spreadsheet from
+the app, the app writes the sheet structure and the formulas, and every member
+reads and writes the very same sheet. The sheet stays the single source of
+truth – the app is only a fast, offline capable front end for it.
 
-## Features
+---
 
-| Area | What it does |
-|---|---|
-| **Members** | everybody who lives in the mess, with a phone number and a role (admin, cook, member) |
-| **Meals** | breakfast, lunch and dinner per day, who cooks, what it cost and who joined |
-| **Attendance** | mark who signed up and who actually ate, share the cost of a meal equally |
-| **Dues** | what every member owes per month, record the payments and see what is still open |
-| **Expenses** | the shared costs of the mess (groceries, power, repairs) with a monthly total |
-| **Shopping list** | what still has to be bought and what it costs |
-| **Announcements** | messages for the whole mess, pinnable |
-| **Backup** | export the whole database into a JSON file and restore it later |
+## 1. Tech stack
 
-## Stack
+| Layer | Choice |
+|-------|--------|
+| Language / UI | Kotlin, Jetpack Compose, Material 3, Navigation Compose (UI layer pending) |
+| Architecture | MVVM + Clean Architecture, `StateFlow`, Unidirectional data flow |
+| Auth | Google **Credential Manager** (identity) + GMS `AuthorizationClient` (`drive.file` token) |
+| Cloud | Google Drive REST v3 + Google Sheets REST v4 |
+| Cache | Room (offline cache, instant start-up) |
+| Background | WorkManager (outbox replay + periodic sync) |
+| DI | Hilt |
+| PDF | `android.graphics.pdf.PdfDocument` + Android share sheet (UI layer pending) |
+| i18n | English / বাংলা via `values/` + `values-bn/` |
 
-| | |
-|---|---|
-| Language | Kotlin 2.4 |
-| UI | Jetpack Compose (Material 3) |
-| Navigation | Navigation Compose (bottom tabs) |
-| Storage | Room 2.8 (KSP) |
-| Backup format | JSON (kotlinx.serialization) |
-| Build | Gradle 9.9.1, Android Gradle Plugin 9.5.1 |
-| SDK | `compileSdk` 37, `targetSdk` 36, `minSdk` 24 |
-| JDK | 17 |
+### Toolchain (pinned – see `AGENTS.md`)
 
-> AGP 9 has **built-in Kotlin support**, the `org.jetbrains.kotlin.android` plugin is therefore
-> not applied. The Kotlin Gradle plugin version is pinned in `build.gradle.kts` and the Compose
-> compiler plugin in `gradle/libs.versions.toml`.
+AGP 9.5.1 · Gradle 9.9.1 · Kotlin 2.4.21 · JDK 17 · `compileSdk = 37` · `targetSdk = 36` ·
+`minSdk = 24` (with `java.time` desugaring)
 
-## Project layout
+### OAuth scope constraint
+
+The app only ever requests:
 
 ```
-app/src/main/java/com/hussain/messmobile/
-├── MessApplication.kt          # database, repository and backup manager
+openid email profile
+https://www.googleapis.com/auth/drive.file
+```
+
+`drive.file` grants access **only to files the user picked or the app created**.
+The restricted `drive` and `spreadsheets` scopes are never requested – which is
+exactly why the sheet has to be created *programmatically* by the app
+(see `SpreadsheetProvisioner`): a file created by the app is fully readable and
+writable with `drive.file`.
+
+Sign-in happens in two steps:
+
+1. **Credential Manager** – the user picks a Google account, the app gets the
+   e-mail address (the identity of the member) and an id token.
+2. **GMS `AuthorizationClient`** – the app requests the single `drive.file`
+   scope and receives an OAuth2 access token for the Drive/Sheets REST calls.
+
+---
+
+## 2. Module map
+
+```
+app/src/main/java/com/messmate/bd/
+├── domain/                     ← pure Kotlin, no Android, no network
+│   ├── model/                  Enums, domain models, SheetSchema, MealGrid
+│   ├── calculation/            CalculationEngine (mirror of the sheet formulas),
+│   │                           CutoffPolicy (cut-off rules)
+│   └── repository/             MessRepository, AccountRepository (interfaces)
 ├── data/
-│   ├── local/                  # Room entities, DAOs and the database
-│   ├── model/                  # the enums of the app
-│   ├── repository/             # the single place that talks to the database
-│   └── backup/                 # the backup file and the backup manager
-├── ui/
-│   ├── components/             # dialogs, cards and the shared widgets
-│   ├── mess/                   # the view models
-│   ├── navigation/AppTabs.kt   # the bottom navigation bar and the routes
-│   ├── screens/                # one package per screen
-│   └── theme/                  # colours, spacing and typography
-└── util/DateUtils.kt
+│   ├── remote/                 GoogleApiFactory, SheetsGateway, DriveGateway,
+│   │                           SpreadsheetProvisioner, MonthRolloverService,
+│   │                           SummaryFormulaBuilder
+│   ├── local/                  Room database, entities, DAOs, converters
+│   ├── mapper/                 Sheet ⇄ entity ⇄ domain mapping
+│   ├── repository/             MessRepositoryImpl, SheetWriter, AccountRepositoryImpl
+│   └── work/                   SyncWorker (outbox replay + pull)
+├── auth/                       GoogleAuthManager (Credential Manager + GMS
+│                               AuthorizationClient), SessionStore (AES-GCM +
+│                               Android Keystore)
+├── core/network/               NetworkMonitor
+└── di/                         Hilt modules
 ```
 
-## Backup and restore
+---
 
-This is the part that makes an uninstall harmless:
+## 3. The generated spreadsheet
 
-1. Open **More → Backup** and tap **Save a backup**. The system dialog lets you pick where the
-   file is stored, for example on the SD card, in Google Drive or in a chat.
-2. Uninstall the app whenever you want, the backup file stays where you put it.
-3. Install the app again, open **More → Backup**, tap **Restore a backup** and pick the file.
-   The app asks for a confirmation and then replaces everything with the content of the backup.
+### Tabs
 
-The backup is a plain JSON file. It is human readable, it can be moved between phones and it
-keeps every relation between the records (the meals still point at their cook, the payments
-still point at their member).
+| Tab | Shape | Written with |
+|-----|-------|--------------|
+| `Config` | `Key \| Value` (8 keys) | `batchUpdate` (RAW) |
+| `Members` | `MemberID \| Name \| Gmail \| Role \| SeatRent \| ActiveStatus \| PrevBalance` | `batchUpdate` (RAW) |
+| `Meals` | `Date \| MemberID \| Breakfast \| Lunch \| Dinner \| GuestMeals \| UpdatedBy \| UpdatedAt` | `batchUpdate` (RAW) |
+| `Bazar` | `EntryID \| Date \| ShopperName \| Items \| Amount \| LoggedBy \| Timestamp` | `append` |
+| `UtilityBills` | `BillID \| Date \| Category \| Amount \| SplitType \| TargetMemberID \| Notes` | `append` |
+| `Deposits` | `DepositID \| Date \| MemberID \| Amount \| Method \| TrxID \| Status` | `append` |
+| `AuditLog` | `LogID \| Timestamp \| ActorEmail \| ActionType \| Details` | `append` |
+| `Summary` | 100 % formulas (see below) | `batchUpdate` (USER_ENTERED) |
 
-The Android system backup is enabled as well, so the app data is also copied by Android itself
-when the device is backed up.
+### `Config` keys (row 1 = header)
 
-## Building
+| Row | Key | Example |
+|-----|-----|---------|
+| 2 | `MessName` | সায়েন্টস মেস |
+| 3 | `MonthYear` | `2026-11` |
+| 4 | `ManagerEmail` | `manager@gmail.com` |
+| 5 | `BreakfastWeight` | `1` or `0.5` |
+| 6 | `BreakfastCutoff` | `07:00` |
+| 7 | `LunchCutoff` | `10:00` |
+| 8 | `DinnerCutoff` | `17:00` |
+| 9 | `LockStatus` | `OPEN` / `LOCKED` |
 
-```bash
-./gradlew assembleDebug     # debug APK
-./gradlew assembleRelease   # release APK, needs signing (see below)
-./gradlew test              # unit tests
-./gradlew lintDebug         # Android lint
+### The `Meals` grid
+
+The tab is pre-populated with **one row per (member, day)** so that a meal
+toggle is a *single cell write* – no append, no row shifting, no collisions
+when two members toggle at the same time.
+
+Rows are grouped **member first, then day**:
+
+```
+M001 → day 1 … day 31      rows  2 … 32
+M002 → day 1 … day 31      rows 33 … 63
+M003 → day 1 … day 31      rows 64 … 94
 ```
 
-The release build is **not** meant to be run on a developer machine, it is built by CI.
+Member ids are strictly increasing (`M001`, `M002`, …) and members are never
+deleted (only deactivated), therefore the row of a member never moves when
+somebody joins later. Every device derives the same coordinates from the
+`Members` tab + the month length → see `MealGrid`.
 
-## Continuous integration
+### `Summary` formulas
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `.github/workflows/ci.yml` | push to `main`, pull requests | unit tests, debug build, lint |
-| `.github/workflows/release.yml` | tag `v*` or manual dispatch | signed release APK, GitHub release |
-
-### Release
-
-Push a tag and the release workflow builds a signed APK and attaches it to a GitHub release:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
+```
+Row 1  | TotalBazar | =SUM(Bazar!$E$2:$E$5000)
+       | TotalMeals | =SUM(Meals!$C$2:$C$4000)*Config!$B$5+SUM(Meals!$D$2:$D$4000)
+       |            |  +SUM(Meals!$E$2:$E$4000)+SUM(Meals!$F$2:$F$4000)
+       | LiveMealRate | =IFERROR($B$1/$D$1,0)
+       | TotalEqualUtilities | =SUMIFS(UtilityBills!$D$2:$D$5000,
+       |                             UtilityBills!$E$2:$E$5000,"EQUAL_ALL")
+Row 2  | Mess | =Config!$B$2      | Month | =Config!$B$3
+Row 3  | MemberID | Name | TotalMeals | MealCost | SeatRent | EqualUtility
+       | CustomUtility | TotalCost | PrevBalance | TotalDeposit | NetBalance
+Row 4+ | one formula block per member:
+         TotalMeals    = SUMIFS(Meals!C…)*Config!$B$5 + SUMIFS(Meals!D…) + …
+         MealCost      = ROUND($C4*IFERROR($F$1,0),2)
+         SeatRent      = IFERROR(VLOOKUP($A4,Members!$A$2:$G$500,5,FALSE),0)
+         EqualUtility  = IFERROR(IF(VLOOKUP($A4,Members!$A$2:$G$500,6,FALSE)="ACTIVE",
+                          $H$1/COUNTIFS(Members!$F$2:$F$500,"ACTIVE"),0),0)
+         CustomUtility = SUMIFS(UtilityBills!$D$2:$D$5000,
+                                UtilityBills!$F$2:$F$5000,$A4)
+         TotalCost     = ROUND($D4+$E4+$F4+$G4,2)
+         PrevBalance   = IFERROR(VLOOKUP($A4,Members!$A$2:$G$500,7,FALSE),0)
+         TotalDeposit  = SUMIFS(Deposits!$D$2:$D$5000,Deposits!$C$2:$C$5000,$A4,
+                                Deposits!$G$2:$G$5000,"VERIFIED")
+         NetBalance    = ROUND(($I4+$J4)-$H4,2)
 ```
 
-The tag is used as the `versionName`, the run number is used as the `versionCode`. A manual run
-(`workflow_dispatch`) allows overriding both.
+`CalculationEngine` mirrors these formulas 1:1 so the app shows the same
+numbers while offline.
 
-### Repository secrets
+### Domain rules that are encoded in the schema
 
-| Secret | Value |
-|---|---|
-| `ANDROID_KEYSTORE_BASE64` | the upload keystore, base64 encoded |
-| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
-| `ANDROID_KEY_ALIAS` | key alias |
-| `ANDROID_KEY_PASSWORD` | key password |
+* **Meal rate** = `TotalBazar / TotalMeals`, breakfast weighted (0.5 / 1.0),
+  guest meals count as full meals and belong to the member that hosts them –
+  so the bazar money is distributed without a leak.
+* **Variable cost** = `Member Meals × Meal Rate`.
+* **Fixed cost** = `SeatRent + EqualUtility + CustomUtility`.
+  `UtilityBills` are either `EQUAL_ALL` (split between the active members) or
+  `CUSTOM_MEMBER` (charged to one member, e.g. an AC sub-meter).
+* **Net balance** = `(PrevBalance + verified deposits) − TotalCost`
+  (positive = the manager owes the member).
+* **Bazar vs. utility** – LPG can be logged either as a `Bazar` entry or as a
+  `UtilityBills` entry with category `Gas`; the manager decides per entry.
+* **Month rollover** – the manager locks the sheet
+  (`Config!LockStatus = LOCKED`), a **new** spreadsheet is created for the next
+  month with the same members, the same seat rents and the closing balance as
+  `PrevBalance`. The old sheet is renamed to `… (Closed)`.
 
-Create the keystore once:
+---
 
-```bash
-keytool -genkey -v -keystore release.keystore -alias upload -keyalg RSA -keysize 2048 -validity 10000
-base64 -w 0 release.keystore
+## 4. Data flow
+
+```
+ViewModel ──▶ MessRepository ──▶ Room ──▶ UI
+                     │              ▲
+                     │              │ optimistic writes + outbox
+                     ▼              │
+               Google Sheet ◀── SyncWorker (WorkManager)
 ```
 
-Store the output of `base64` in `ANDROID_KEYSTORE_BASE64`. **Never commit the keystore**, the
-`.gitignore` already ignores `*.jks` and `*.keystore`.
+* The UI **always** reads from Room → instant start-up, works offline.
+* Every command is written to Room first (optimistic) and queued in the
+  `pending_operations` outbox; the queue is pushed to the sheet immediately
+  when online and replayed by `SyncWorker` otherwise.
+* One `values.batchGet` reads **all** tabs in a single HTTP request.
+* Writes use `values.batchUpdate` (targeted cells) and `values.append`
+  (ledgers) – never a read-modify-write cycle.
 
-### How the release APK is signed
+---
 
-Gradle builds the release APK **unsigned**, the CI signs it with `apksigner`. The keystore
-therefore never has to be part of the Gradle configuration and cannot leak into the build
-script or into a stack trace.
+## 5. Setup
 
-### Signing outside of CI
+1. Create a project in the [Google Cloud console](https://console.cloud.google.com).
+2. Enable **Google Drive API** and **Google Sheets API**.
+3. Create an **OAuth client ID → Web application** and copy the client id.
+4. Put it into `local.properties` (not committed):
 
-The same two commands work on a developer machine:
+   ```properties
+   MESSMATE_SERVER_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
+   ```
 
-```bash
-./gradlew assembleRelease
-"$ANDROID_HOME/build-tools/37.0.0/apksigner" sign \
-  --ks /absolute/path/release.keystore \
-  --ks-key-alias upload \
-  --ks-pass pass:YOUR_STORE_PASSWORD \
-  --key-pass pass:YOUR_KEY_PASSWORD \
-  --out mess-mobile.apk \
-  app/build/outputs/apk/release/app-release-unsigned.apk
-```
+   (or export `MESSMATE_SERVER_CLIENT_ID` before building)
+5. Open the project in Android Studio and run the `app` configuration.
+
+### Permissions the app asks for
+
+`INTERNET`, `ACCESS_NETWORK_STATE`, `POST_NOTIFICATIONS` (sync status) and
+`CAMERA` (QR scan for “join a mess”).
+
+---
+
+## 6. Project status
+
+| Area | State |
+|------|-------|
+| Gradle / Hilt / Room / WorkManager setup | ✅ |
+| Domain model, calculation engine, cut-off policy | ✅ |
+| Google Sheet provisioning (8 tabs + formulas + sharing) | ✅ |
+| Room cache, mappers, repository, outbox, sync worker | ✅ |
+| Credential Manager sign-in, encrypted session storage | ✅ |
+| Compose UI (onboarding, dashboard, bazar, utilities, members, statement, audit, PDF) | ⏳ next step |

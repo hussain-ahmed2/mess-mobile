@@ -1,42 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!--
-        Required on Android 11+ so that the app can resolve a browser for the
-        "Learn more" / "Expo documentation" links that open in a Custom Tab.
-    -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https" />
-        </intent>
-    </queries>
+    <!-- Sync + Google Drive / Sheets access -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Background sync notifications (Android 13+ runtime prompt) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- QR scanning for joining a mess -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
-        android:name=".MessApplication"
-        android:allowBackup="true"
+        android:name=".MessMateApp"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MessMobile">
+        android:theme="@style/Theme.MessMate"
+        tools:targetApi="34">
 
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|keyboard|uiMode|density|fontScale|smallestScreenSize|layoutDirection"
-            android:enableOnBackInvokedCallback="true"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.MessMobile.Starting"
-            android:windowSoftInputMode="adjustResize">
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|locale|layoutDirection|fontScale"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.MessMate">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Deep link used by the "Join Mess" flow: a shared sheet link / QR payload
+          can point straight at the app.
+        -->
+        <activity
+            android:name=".ui.join.JoinMessActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.MessMate">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="messmate" android:host="join" />
+            </intent-filter>
+        </activity>
+
+        <!-- WorkManager is initialised through Hilt (see MessMateApp). -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
     </application>
 
 </manifest>

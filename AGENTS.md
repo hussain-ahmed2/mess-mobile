@@ -1,11 +1,38 @@
 This is a **native Android** app written in Kotlin with Jetpack Compose. There is no React
 Native, no Expo and no JS toolchain in this repository.
 
-The app is a **local only** mess manager: the data lives in a Room database on the device,
-there is no server and no account. The backup and restore feature writes the whole database
-into a JSON file so the user gets their data back after an uninstall.
+MessMate BD is a mess manager for Bangladeshi Bachelor/Student messes that runs on a
+**"Bring Your Own Google Sheet" (BYOS)** architecture: the mess manager creates a Google
+Spreadsheet from the app, the app writes the sheet structure and the formulas, and every
+member reads and writes that very same sheet. There is **no MessMate server**.
 
-Prioritize mobile-first patterns, performance and cross-device compatibility.
+## Architecture rules (do not break them)
+
+* **The sheet is the master.** The app is a front end for it. Every number that the app
+  shows must exist as a formula in the `Summary` tab – the local calculation engine
+  (`CalculationEngine`) is only a mirror of it so the app works offline.
+* **Room is the source of truth for the UI.** The ViewModels never read from the network
+  directly. Writes go to Room first (optimistic) and are queued in the `pending_operations`
+  outbox; `SyncWorker` replays the queue when the device is online.
+* **Never read-modify-write a sheet cell.** Either target a single cell with
+  `values.batchUpdate` or append a row with `values.append`. Two members must never be able
+  to overwrite each other.
+* **Read everything in one request.** `values.batchGet` with all tab ranges – one HTTP
+  request per sync, not one per tab.
+* **Only `drive.file`.** The app never asks for the restricted `drive` or `spreadsheets`
+  scopes. That is why the sheet has to be created programmatically (a file the app creates
+  is fully accessible with `drive.file`).
+* **The `Meals` grid is member-major.** Row = `2 + memberIndex * daysInMonth + (day - 1)`.
+  Member ids are strictly increasing (`M001`, `M002`, …) and members are never deleted
+  (only deactivated), so a row never moves when somebody joins later. Every device derives
+  the same coordinates from the `Members` tab – see `MealGrid`.
+
+## The sheet schema is a public contract
+
+`domain/model/SheetSchema.kt` is the single source of truth for the 8 tabs, their headers,
+column order, the `Config` row numbers and the `Summary` layout. Changing it changes the
+format of every mess sheet in the wild – bump `SCHEMA_VERSION` and write a migration when
+you do.
 
 ## Versions are pinned, verify before upgrading
 
@@ -22,6 +49,9 @@ Gradle, AGP, Kotlin and the AndroidX libraries are pinned in `gradle/libs.versio
   bumping a version. `targetSdk` stays at 36, that is what the Play Store asks for today.
 - Room is processed with KSP, the KSP version is independent of the Kotlin version but has to
   support the Kotlin compiler that is used.
+- `minSdk = 24` – `java.time` is used everywhere and is desugared
+  (`isCoreLibraryDesugaringEnabled = true`). Do not use APIs that are not part of the
+  desugared library (for example `java.util.Base64` – use `android.util.Base64`).
 
 ## Commands
 
@@ -29,36 +59,26 @@ Gradle, AGP, Kotlin and the AndroidX libraries are pinned in `gradle/libs.versio
 ./gradlew assembleDebug     # debug APK
 ./gradlew assembleRelease   # release APK (needs signing secrets)
 ./gradlew test              # unit tests
-./gradlew lintDebug         # Android lint
+./gradlew lint              # Android Lint
 ```
 
-Use the Gradle wrapper, never a system Gradle. JDK 17 is the reference JDK.
+The Google OAuth client id is **not** in the repository. Put it into `local.properties`:
 
-## Structure
+```properties
+MESSMATE_SERVER_CLIENT_ID=your-client-id.apps.googleusercontent.com
+```
 
-- The screens live in `app/src/main/java/com/hussain/messmobile/ui/screens/`, one package per
-  screen.
-- Reusable UI lives in `app/src/main/java/com/hussain/messmobile/ui/components/`, the dialogs
-  are grouped in `MessDialogs.kt`.
-- The view models live in `app/src/main/java/com/hussain/messmobile/ui/mess/` and are created by
-  `ViewModelFactory`.
-- The database lives in `app/src/main/java/com/hussain/messmobile/data/local/`, the only place
-  that talks to Room is `MessRepository`.
-- Colours, spacing and typography live in `app/src/main/java/com/hussain/messmobile/ui/theme/`.
-  The colour palette is provided with `LocalAppColors` / `appColors`, use `ThemedText` and the
-  `appColors` accessor instead of hard coded colours so light and dark mode keep working.
-- Navigation is set up in `ui/navigation/AppTabs.kt`, one enum entry per tab.
+or export `MESSMATE_SERVER_CLIENT_ID` before building. It is the OAuth client id of a **Web
+application** (client_type = 3) from the Google Cloud console and is used by Credential
+Manager ("Sign in with Google") and by the GMS `AuthorizationClient` that requests the
+`drive.file` scope.
 
-## Rules
+## Coding conventions
 
-- The database is the single source of truth. Screens read from the repository flows and write
-  through the view models, never through a DAO.
-- Never commit a keystore, a password or any other signing material. Gradle builds the release
-  APK unsigned, the CI signs it with `apksigner` and the secrets (`ANDROID_KEYSTORE_*`) only
-  exist in the workflow.
-- The release APK is built by CI (`.github/workflows/release.yml`), not on a developer machine.
-  Keep the workflow in sync with `compileSdk`/`buildToolsVersion` changes.
-- The backup format is a public contract: it has to stay readable by every version of the app.
-  Bump `BackupFile.CURRENT_FORMAT_VERSION` when the format changes in an incompatible way and
-  keep `BackupFileTest` up to date.
-- Run `./gradlew test lintDebug` before declaring a task done.
+- Comments explain **why**, not what. Keep them short and in English.
+- Domain code (`domain/`) is pure Kotlin: no Android imports, no network, no Room.
+  That is what makes the calculation engine and the cut-off policy unit testable.
+- Public APIs get KDoc. Enums keep their `sheetValue` – that string is what ends up in the
+  spreadsheet, so it must stay stable.
+- Money is rounded with `CalculationEngine.money()` (two decimals) – the same way the
+  spreadsheet rounds.

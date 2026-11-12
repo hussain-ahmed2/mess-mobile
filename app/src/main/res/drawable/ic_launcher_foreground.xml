@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher icon foreground – a mess plate with a fork, drawn inside the
+  72x72dp safe zone of the 108x108dp adaptive icon canvas.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- plate -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 C68,30 79,40 79,52.5 C79,65 68,75 54,75 C40,75 29,65 29,52.5 C29,40 40,30 54,30 Z M54,38 C44.6,38 37,44.3 37,52.5 C37,60.7 44.6,67 54,67 C63.4,67 71,60.7 71,52.5 C71,44.3 63.4,38 54,38 Z" />
+
+    <!-- fork -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,26 L37,26 L37,38 L39.5,38 L39.5,26 L42.5,26 L42.5,38 L45,38 L45,26 L48,26 L48,40 C48,43.3 45.4,46 42,46 L42,78 L39,78 L39,46 C35.6,46 33,43.3 33,40 Z" />
+
+    <!-- spoon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M66,26 C70.4,26 74,29.6 74,34 C74,38.4 70.4,42 66,42 C64.9,42 63.9,41.8 63,41.5 L63,78 L60,78 L60,41.5 C59.1,41.8 58.1,42 57,42 C52.6,42 49,38.4 49,34 C49,29.6 52.6,26 57,26 Z" />
+</vector>

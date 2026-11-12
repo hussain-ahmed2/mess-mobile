@@ -20,6 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "mess-mobile"
-
+rootProject.name = "MessMate BD"
 include(":app")
