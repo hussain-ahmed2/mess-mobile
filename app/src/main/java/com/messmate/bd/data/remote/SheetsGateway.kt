@@ -1,15 +1,18 @@
 package com.messmate.bd.data.remote
 
-import com.google.api.services.sheets.Sheets
-import com.google.api.services.sheets.model.AppendValuesRequest
-import com.google.api.services.sheets.model.BatchGetValuesRequest
-import com.google.api.services.sheets.model.BatchUpdateSpreadsheetRequest
-import com.google.api.services.sheets.model.BatchUpdateValuesRequest
-import com.google.api.services.sheets.model.GridProperties
-import com.google.api.services.sheets.model.Request
-import com.google.api.services.sheets.model.Spreadsheet
-import com.google.api.services.sheets.model.SpreadsheetProperties
-import com.google.api.services.sheets.model.ValueRange
+import com.google.api.services.sheets.v4.Sheets
+import com.google.api.services.sheets.v4.model.AddSheetRequest
+import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest
+import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest
+import com.google.api.services.sheets.v4.model.ClearValuesRequest
+import com.google.api.services.sheets.v4.model.DeleteSheetRequest
+import com.google.api.services.sheets.v4.model.GridProperties
+import com.google.api.services.sheets.v4.model.Request
+import com.google.api.services.sheets.v4.model.Spreadsheet
+import com.google.api.services.sheets.v4.model.SheetProperties
+import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest
+import com.google.api.services.sheets.v4.model.ValueRange
+import com.messmate.bd.domain.model.SheetSchema
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -42,7 +45,7 @@ class SheetsGateway @Inject constructor(
     /**
      * Reads **all** requested ranges with a single HTTP request.
      *
-     * @param ranges AAR1 notation ranges such as `Members!A1:G200`.
+     * @param ranges A1 notation ranges such as `Members!A1:G200`.
      * @return map of tab name → rows (each row is a list of cell strings).
      */
     suspend fun batchRead(
@@ -51,12 +54,11 @@ class SheetsGateway @Inject constructor(
     ): Map<String, List<List<String>>> = withContext(Dispatchers.IO) {
         if (ranges.isEmpty()) return@withContext emptyMap()
 
-        val request = BatchGetValuesRequest()
+        val response = service.spreadsheets().values().batchGet(spreadsheetId)
             .setRanges(ranges)
-            .setValueRenderOption(com.google.api.services.sheets.model.ValueRenderOption.FORMATTED_VALUE)
-            .setDateTimeRenderOption(com.google.api.services.sheets.model.DateTimeRenderOption.SERIAL_NUMBER)
-
-        val response = service.spreadsheets().values().batchGet(spreadsheetId, request).execute()
+            .setValueRenderOption(VALUE_RENDER_FORMATTED)
+            .setDateTimeRenderOption(DATE_TIME_RENDER_SERIAL)
+            .execute()
 
         val result = LinkedHashMap<String, List<List<String>>>(ranges.size)
         response.getValueRanges()?.forEachIndexed { index, range ->
@@ -64,7 +66,8 @@ class SheetsGateway @Inject constructor(
             val requested = ranges.getOrNull(index)
             val tab = tabNameOf(range.getRange()).ifBlank { tabNameOf(requested) }
             val key = tab.ifBlank { requested.orEmpty() }
-            result[key] = range.getValues()?.map { row -> row.map { cell -> cell?.toString().orEmpty() } }
+            result[key] = range.getValues()
+                ?.map { row -> row.map { cell -> cell?.toString().orEmpty() } }
                 ?: emptyList()
         }
         result
@@ -93,7 +96,7 @@ class SheetsGateway @Inject constructor(
         if (ranges.isEmpty()) return@withContext
 
         val data = ranges.map { range ->
-            BatchUpdateValuesRequest.Data()
+            ValueRange()
                 .setRange(range.range)
                 .setValues(range.values.toApiValues())
         }
@@ -120,23 +123,26 @@ class SheetsGateway @Inject constructor(
     ): Unit = withContext(Dispatchers.IO) {
         if (rows.isEmpty()) return@withContext
 
-        val request = AppendValuesRequest()
-            .setValueInputOption(inputOption.apiValue)
-            .setInsertDataOption(INSERT_DATA_OPTION_INSERT_ROWS)
-            .setValues(rows.toApiValues())
-
         // The range decides where the rows are appended and how wide they are
         // ("Bazar!A:G" = the full width of the tab).
-        val lastColumn = com.messmate.bd.domain.model.SheetSchema.lastColumnLetter(tab)
+        val lastColumn = SheetSchema.lastColumnLetter(tab)
+        val range = "$tab!A:$lastColumn"
+
+        val valueRange = ValueRange()
+            .setRange(range)
+            .setValues(rows.toApiValues())
+
         service.spreadsheets().values()
-            .append(spreadsheetId, "$tab!A:$lastColumn", request)
+            .append(spreadsheetId, range, valueRange)
+            .setValueInputOption(inputOption.apiValue)
+            .setInsertDataOption(INSERT_DATA_OPTION_INSERT_ROWS)
             .execute()
     }
 
     /** Clears a range (used when a member is removed from the grid). */
     suspend fun clear(spreadsheetId: String, range: String): Unit = withContext(Dispatchers.IO) {
         service.spreadsheets().values()
-            .clear(spreadsheetId, range, com.google.api.services.sheets.model.ClearValuesRequest())
+            .clear(spreadsheetId, range, ClearValuesRequest())
             .execute()
     }
 
@@ -166,8 +172,8 @@ class SheetsGateway @Inject constructor(
             // 1. Create the missing tabs (in the requested order).
             desiredTabs.filter { it !in existing }.forEach { title ->
                 requests += Request().setAddSheet(
-                    com.google.api.services.sheets.model.AddSheetRequest()
-                        .setProperties(SpreadsheetProperties().setTitle(title)),
+                    AddSheetRequest()
+                        .setProperties(SheetProperties().setTitle(title)),
                 )
             }
 
@@ -176,8 +182,7 @@ class SheetsGateway @Inject constructor(
                 ?.filter { it.properties.title !in desiredTabs }
                 ?.forEach { sheet ->
                     requests += Request().setDeleteSheet(
-                        com.google.api.services.sheets.model.DeleteSheetRequest()
-                            .setSheetId(sheet.properties.sheetId),
+                        DeleteSheetRequest().setSheetId(sheet.properties.sheetId),
                     )
                 }
 
@@ -194,10 +199,10 @@ class SheetsGateway @Inject constructor(
                 ?.filter { it.properties.title in desiredTabs }
                 ?.map { sheet ->
                     Request().setUpdateSheetProperties(
-                        com.google.api.services.sheets.model.UpdateSheetPropertiesRequest()
-                            .setSheetId(sheet.properties.sheetId)
+                        UpdateSheetPropertiesRequest()
                             .setProperties(
-                                SpreadsheetProperties()
+                                SheetProperties()
+                                    .setSheetId(sheet.properties.sheetId)
                                     .setGridProperties(GridProperties().setFrozenRowCount(1)),
                             ),
                     )
@@ -227,18 +232,21 @@ class SheetsGateway @Inject constructor(
     private fun List<List<Any?>>.toApiValues(): MutableList<MutableList<Any>> =
         map { row ->
             row.map { cell ->
-                when (cell) {
+                val value: Any = when (cell) {
                     null -> ""
                     is String -> cell
                     is Number -> cell
                     is Boolean -> cell
                     else -> cell.toString()
                 }
+                value
             }.toMutableList()
         }.toMutableList()
 
     private companion object {
         const val INSERT_DATA_OPTION_INSERT_ROWS = "INSERT_ROWS"
+        const val VALUE_RENDER_FORMATTED = "FORMATTED_VALUE"
+        const val DATE_TIME_RENDER_SERIAL = "SERIAL_NUMBER"
     }
 }
 

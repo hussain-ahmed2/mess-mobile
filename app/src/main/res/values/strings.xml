@@ -146,4 +146,39 @@
     <string name="settings_cutoffs">Meal cut-off times</string>
     <string name="settings_breakfast_weight">Breakfast weight</string>
     <string name="settings_sign_out">Sign out</string>
+
+    <!-- ============ Create / join mess ============ -->
+    <string name="create_mess_details">Mess details</string>
+    <string name="mess_name">Mess name</string>
+    <string name="mess_name_hint">e.g. সায়েন্টস মেস</string>
+    <string name="manager_name">Manager name</string>
+    <string name="manager_email">Manager Gmail</string>
+    <string name="members_add_hint">Members can also be added later.</string>
+    <string name="join_sheet_id">Mess Sheet ID</string>
+    <string name="join_sheet_id_hint">Paste the ID from the sheet link</string>
+    <string name="join_scan_qr">Scan QR code</string>
+    <string name="join_button">Join mess</string>
+    <string name="join_waiting">Waiting for the manager to add you…</string>
+    <string name="guest_meals">Guest meals</string>
+    <string name="add_bazar">Add bazar</string>
+    <string name="add_bill">Add bill</string>
+    <string name="add_deposit">Add deposit</string>
+    <string name="add_member">Add member</string>
+    <string name="deposits_list">Deposits</string>
+    <string name="utilities_list">Bills</string>
+    <string name="bazar_list">Market trips</string>
+    <string name="next_cutoff">Next cut-off</string>
+    <string name="role_manager_short">Manager</string>
+    <string name="role_member_short">Member</string>
+    <string name="month_closed">Closed</string>
+    <string name="export_pdf_title">Monthly statement</string>
+    <string name="pdf_share_subject">MessMate BD – monthly statement</string>
+    <string name="audit_action">Action</string>
+    <string name="audit_actor">By</string>
+    <string name="settings_close_month">Close this month</string>
+    <string name="settings_leave_mess">Leave this mess</string>
+    <string name="qr_invite_description">Scan this code with the MessMate app to join the mess.</string>
+    <string name="scan_qr_hint">Point the camera at the QR code of the mess.</string>
+    <string name="camera_permission_needed">Camera permission is needed to scan the QR code.</string>
+    <string name="month">Month</string>
 </resources>

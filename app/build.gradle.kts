@@ -78,9 +78,23 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    bundle {
+        language {
+            // The runtime language switch (English / বাংলা) only works when
+            // both languages are part of the base APK.
+            enableSplit = false
+        }
+    }
+
     packaging {
         resources {
-            excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/DEPENDENCIES")
+            excludes += setOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/DEPENDENCIES",
+                // The Google auth libraries ship the same index file twice.
+                "/META-INF/INDEX.LIST",
+                "/META-INF/*.kotlin_module",
+            )
         }
     }
 

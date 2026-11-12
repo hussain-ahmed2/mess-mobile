@@ -226,4 +226,21 @@ ViewModel ──▶ MessRepository ──▶ Room ──▶ UI
 | Google Sheet provisioning (8 tabs + formulas + sharing) | ✅ |
 | Room cache, mappers, repository, outbox, sync worker | ✅ |
 | Credential Manager sign-in, encrypted session storage | ✅ |
-| Compose UI (onboarding, dashboard, bazar, utilities, members, statement, audit, PDF) | ⏳ next step |
+| Compose UI | ✅ onboarding, dashboard, bazar, utilities, members, statement, audit, settings |
+| PDF export (`PdfDocument` + share sheet) | ✅ |
+| QR invite + QR scanner | ✅ |
+
+### Screens
+
+| Screen | What it does |
+|--------|--------------|
+| Onboarding | Google sign-in, the scope explainer, "create a mess" / "join a mess" |
+| Create mess | Mess name, month, cut-off times, breakfast weight, the first members |
+| Join mess | Paste the sheet id, pick it from Drive, or scan the manager's QR code |
+| Dashboard | Live meal rate, personal balance, today's and tomorrow's meals with the cut-off countdown |
+| Bazar | The market trips and the total bazar |
+| Utilities | Cook, gas, electricity, Wi-Fi, water, garbage – equal split or one member |
+| Members | The roster, seat rents, deposits (with verify/reject) and the invite QR code |
+| Statement | The full monthly breakdown of every member + PDF export |
+| Audit log | Every change of the mess, newest first |
+| Settings | Language (English / বাংলা), cut-offs, breakfast weight, close the month, sign out |

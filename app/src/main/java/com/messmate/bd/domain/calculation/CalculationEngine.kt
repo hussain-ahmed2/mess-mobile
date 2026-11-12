@@ -83,6 +83,11 @@ object CalculationEngine {
         bills.filter { it.splitType == SplitType.CUSTOM_MEMBER && it.targetMemberId == memberId }
             .sumOf { it.amount }
 
+    /** Sum of all verified deposits of a member (pending ones do not count). */
+    fun verifiedDepositsOf(deposits: List<Deposit>, memberId: String): Double =
+        deposits.filter { it.memberId == memberId && it.status == DepositStatus.VERIFIED }
+            .sumOf { it.amount }
+
     /** Number of members that are currently counted for the equal split. */
     fun activeMemberCount(members: List<Member>): Int =
         members.count { it.activeStatus == ActiveStatus.ACTIVE }

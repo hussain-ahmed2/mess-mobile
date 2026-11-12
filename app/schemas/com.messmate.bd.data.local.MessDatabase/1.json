@@ -1,0 +1,698 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "b99dad75b9b719a2f0880e3054141aa5",
+    "entities": [
+      {
+        "tableName": "mess",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `name` TEXT NOT NULL, `spreadsheetUrl` TEXT NOT NULL, `role` TEXT NOT NULL, `managerEmail` TEXT NOT NULL, `monthYear` TEXT NOT NULL, `myMemberId` TEXT, `schemaVersion` INTEGER NOT NULL, `lastSyncedAt` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, PRIMARY KEY(`spreadsheetId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "spreadsheetUrl",
+            "columnName": "spreadsheetUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "managerEmail",
+            "columnName": "managerEmail",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthYear",
+            "columnName": "monthYear",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "myMemberId",
+            "columnName": "myMemberId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSyncedAt",
+            "columnName": "lastSyncedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId"
+          ]
+        }
+      },
+      {
+        "tableName": "config",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `messName` TEXT NOT NULL, `monthYear` TEXT NOT NULL, `managerEmail` TEXT NOT NULL, `breakfastWeight` REAL NOT NULL, `breakfastCutoff` TEXT NOT NULL, `lunchCutoff` TEXT NOT NULL, `dinnerCutoff` TEXT NOT NULL, `lockStatus` TEXT NOT NULL, PRIMARY KEY(`spreadsheetId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messName",
+            "columnName": "messName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthYear",
+            "columnName": "monthYear",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "managerEmail",
+            "columnName": "managerEmail",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "breakfastWeight",
+            "columnName": "breakfastWeight",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "breakfastCutoff",
+            "columnName": "breakfastCutoff",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lunchCutoff",
+            "columnName": "lunchCutoff",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dinnerCutoff",
+            "columnName": "dinnerCutoff",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lockStatus",
+            "columnName": "lockStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId"
+          ]
+        }
+      },
+      {
+        "tableName": "members",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `memberId` TEXT NOT NULL, `name` TEXT NOT NULL, `gmail` TEXT NOT NULL, `role` TEXT NOT NULL, `seatRent` REAL NOT NULL, `activeStatus` TEXT NOT NULL, `prevBalance` REAL NOT NULL, `sheetRow` INTEGER NOT NULL, PRIMARY KEY(`spreadsheetId`, `memberId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberId",
+            "columnName": "memberId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gmail",
+            "columnName": "gmail",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seatRent",
+            "columnName": "seatRent",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeStatus",
+            "columnName": "activeStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prevBalance",
+            "columnName": "prevBalance",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sheetRow",
+            "columnName": "sheetRow",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId",
+            "memberId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_members_spreadsheetId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_members_spreadsheetId` ON `${TABLE_NAME}` (`spreadsheetId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "meals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `date` TEXT NOT NULL, `memberId` TEXT NOT NULL, `breakfast` INTEGER NOT NULL, `lunch` INTEGER NOT NULL, `dinner` INTEGER NOT NULL, `guestMeals` INTEGER NOT NULL, `updatedBy` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, PRIMARY KEY(`spreadsheetId`, `date`, `memberId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberId",
+            "columnName": "memberId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "breakfast",
+            "columnName": "breakfast",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lunch",
+            "columnName": "lunch",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dinner",
+            "columnName": "dinner",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guestMeals",
+            "columnName": "guestMeals",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedBy",
+            "columnName": "updatedBy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId",
+            "date",
+            "memberId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_meals_spreadsheetId_memberId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId",
+              "memberId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meals_spreadsheetId_memberId` ON `${TABLE_NAME}` (`spreadsheetId`, `memberId`)"
+          },
+          {
+            "name": "index_meals_spreadsheetId_date",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId",
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meals_spreadsheetId_date` ON `${TABLE_NAME}` (`spreadsheetId`, `date`)"
+          }
+        ]
+      },
+      {
+        "tableName": "bazar",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `entryId` TEXT NOT NULL, `date` TEXT NOT NULL, `shopperName` TEXT NOT NULL, `items` TEXT NOT NULL, `amount` REAL NOT NULL, `loggedBy` TEXT NOT NULL, `timestamp` TEXT NOT NULL, `sheetRow` INTEGER NOT NULL, PRIMARY KEY(`spreadsheetId`, `entryId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryId",
+            "columnName": "entryId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shopperName",
+            "columnName": "shopperName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "items",
+            "columnName": "items",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "loggedBy",
+            "columnName": "loggedBy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sheetRow",
+            "columnName": "sheetRow",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId",
+            "entryId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_bazar_spreadsheetId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_bazar_spreadsheetId` ON `${TABLE_NAME}` (`spreadsheetId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "utility_bills",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `billId` TEXT NOT NULL, `date` TEXT NOT NULL, `category` TEXT NOT NULL, `amount` REAL NOT NULL, `splitType` TEXT NOT NULL, `targetMemberId` TEXT, `notes` TEXT NOT NULL, `sheetRow` INTEGER NOT NULL, PRIMARY KEY(`spreadsheetId`, `billId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "billId",
+            "columnName": "billId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splitType",
+            "columnName": "splitType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetMemberId",
+            "columnName": "targetMemberId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sheetRow",
+            "columnName": "sheetRow",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId",
+            "billId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_utility_bills_spreadsheetId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_utility_bills_spreadsheetId` ON `${TABLE_NAME}` (`spreadsheetId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "deposits",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `depositId` TEXT NOT NULL, `date` TEXT NOT NULL, `memberId` TEXT NOT NULL, `amount` REAL NOT NULL, `method` TEXT NOT NULL, `trxId` TEXT NOT NULL, `status` TEXT NOT NULL, `sheetRow` INTEGER NOT NULL, PRIMARY KEY(`spreadsheetId`, `depositId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "depositId",
+            "columnName": "depositId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberId",
+            "columnName": "memberId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "method",
+            "columnName": "method",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trxId",
+            "columnName": "trxId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sheetRow",
+            "columnName": "sheetRow",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId",
+            "depositId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_deposits_spreadsheetId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_deposits_spreadsheetId` ON `${TABLE_NAME}` (`spreadsheetId`)"
+          },
+          {
+            "name": "index_deposits_spreadsheetId_memberId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId",
+              "memberId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_deposits_spreadsheetId_memberId` ON `${TABLE_NAME}` (`spreadsheetId`, `memberId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "audit_log",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`spreadsheetId` TEXT NOT NULL, `logId` TEXT NOT NULL, `timestamp` TEXT NOT NULL, `actorEmail` TEXT NOT NULL, `actionType` TEXT NOT NULL, `details` TEXT NOT NULL, `sheetRow` INTEGER NOT NULL, PRIMARY KEY(`spreadsheetId`, `logId`))",
+        "fields": [
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "logId",
+            "columnName": "logId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actorEmail",
+            "columnName": "actorEmail",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionType",
+            "columnName": "actionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details",
+            "columnName": "details",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sheetRow",
+            "columnName": "sheetRow",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "spreadsheetId",
+            "logId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_audit_log_spreadsheetId",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_audit_log_spreadsheetId` ON `${TABLE_NAME}` (`spreadsheetId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pending_operations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `spreadsheetId` TEXT NOT NULL, `type` TEXT NOT NULL, `payload` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `status` TEXT NOT NULL, `attempts` INTEGER NOT NULL, `lastError` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "spreadsheetId",
+            "columnName": "spreadsheetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payload",
+            "columnName": "payload",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "attempts",
+            "columnName": "attempts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastError",
+            "columnName": "lastError",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pending_operations_spreadsheetId_status",
+            "unique": false,
+            "columnNames": [
+              "spreadsheetId",
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_operations_spreadsheetId_status` ON `${TABLE_NAME}` (`spreadsheetId`, `status`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b99dad75b9b719a2f0880e3054141aa5')"
+    ]
+  }
+}

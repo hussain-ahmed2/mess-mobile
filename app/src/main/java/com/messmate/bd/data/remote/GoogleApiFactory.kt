@@ -1,10 +1,11 @@
 package com.messmate.bd.data.remote
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.http.HttpExecuteInterceptor
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
-import com.google.api.services.sheets.Sheets
+import com.google.api.services.sheets.v4.Sheets
 import java.io.IOException
 import java.security.GeneralSecurityException
 import javax.inject.Inject
@@ -64,7 +65,7 @@ class GoogleApiFactory @Inject constructor(
      * instead of an opaque HTTP error.
      */
     private fun tokenInitializer(): HttpRequestInitializer = HttpRequestInitializer { request ->
-        request.interceptor { httpRequest ->
+        request.interceptor = HttpExecuteInterceptor { httpRequest ->
             val token = tokenProvider.currentToken()
                 ?: throw IOException("No Google account signed in – cannot talk to Drive/Sheets")
             httpRequest.headers.setAuthorization("Bearer $token")

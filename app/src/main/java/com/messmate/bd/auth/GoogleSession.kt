@@ -23,8 +23,8 @@ data class GoogleSession(
         nowMillis - issuedAtMillis >= lifetimeMillis
 
     /** `true` when the app may talk to the Drive / Sheets APIs. */
-    fun hasDriveFileScope: Boolean =
-        grantedScopes.any { it.equals(DRIVE_FILE_SCOPE, ignoreCase = true) }
+    val hasDriveFileScope: Boolean
+        get() = grantedScopes.any { it.equals(DRIVE_FILE_SCOPE, ignoreCase = true) }
 
     companion object {
         /** Google access tokens are valid for one hour – renew a bit earlier. */

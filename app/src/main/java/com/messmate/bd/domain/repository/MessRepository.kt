@@ -10,6 +10,7 @@ import com.messmate.bd.domain.model.MemberStatement
 import com.messmate.bd.domain.model.Mess
 import com.messmate.bd.domain.model.MessBlueprint
 import com.messmate.bd.domain.model.MessConfig
+import com.messmate.bd.domain.model.MessTotals
 import com.messmate.bd.domain.model.UtilityBill
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -69,6 +70,12 @@ interface MessRepository {
 
     /** Statements of every member, recomputed locally from the cached tabs. */
     fun observeStatements(): Flow<List<MemberStatement>>
+
+    /**
+     * The headline numbers of the `Summary` tab – total bazar, total meals,
+     * the live meal rate and the total of the equal utilities.
+     */
+    fun observeTotals(): Flow<MessTotals>
 
     /** Number of changes that still wait to be pushed to the sheet. */
     fun observePendingSyncCount(): Flow<Int>
@@ -164,7 +171,7 @@ interface MessRepository {
      * Locks the current sheet, creates the sheet for the next month, copies the
      * members and seat rents and carries the closing balances forward.
      */
-    suspend fun closeMonthAndRollOver(): Result<Mess>
+    suspend fun closeMonthAndRollover(): Result<Mess>
 
     /** The month the current sheet belongs to. */
     suspend fun currentMonth(): YearMonth?

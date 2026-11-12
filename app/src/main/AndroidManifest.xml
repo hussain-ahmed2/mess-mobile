@@ -55,6 +55,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Sharing the exported PDF statements. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- WorkManager is initialised through Hilt (see MessMateApp). -->
         <provider
             android:name="androidx.startup.InitializationProvider"

@@ -33,7 +33,7 @@ class SummaryFormulaBuilderTest {
 
         assertEquals(11, row.size)
         assertEquals("M001", row[0])
-        assertEquals("=IFERROR(VLOOKUP(\$A4,", row[1])
+        assertTrue(row[1].startsWith("=IFERROR(VLOOKUP(\$A4,"))
         assertTrue(row[2].startsWith("=SUMIFS(Meals!"))
         assertEquals("=ROUND(\$C4*IFERROR(\$F\$1,0),2)", row[3])
         assertTrue(row[5].contains("COUNTIFS(Members!"))

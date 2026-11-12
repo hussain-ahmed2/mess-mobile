@@ -245,10 +245,10 @@ object SheetSchema {
         const val ROW_FIRST_MEMBER = 4
 
         // Metric block cells
-        const val CELL_TOTAL_BAZAR = "$B$1"
-        const val CELL_TOTAL_MEALS = "$D$1"
-        const val CELL_MEAL_RATE = "$F$1"
-        const val CELL_TOTAL_EQUAL_UTILITY = "$H$1"
+        const val CELL_TOTAL_BAZAR = "\$B\$1"
+        const val CELL_TOTAL_MEALS = "\$D\$1"
+        const val CELL_MEAL_RATE = "\$F\$1"
+        const val CELL_TOTAL_EQUAL_UTILITY = "\$H\$1"
     }
 
     // -----------------------------------------------------------------------

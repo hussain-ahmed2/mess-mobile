@@ -146,4 +146,39 @@
     <string name="settings_cutoffs">খাবারের সময়সীমা</string>
     <string name="settings_breakfast_weight">নাস্তার ওজন</string>
     <string name="settings_sign_out">সাইন আউট</string>
+
+    <!-- ============ Create / join mess ============ -->
+    <string name="create_mess_details">মেসের তথ্য</string>
+    <string name="mess_name">মেসের নাম</string>
+    <string name="mess_name_hint">যেমন সায়েন্টস মেস</string>
+    <string name="manager_name">ম্যানেজারের নাম</string>
+    <string name="manager_email">ম্যানেজারের জিমেইল</string>
+    <string name="members_add_hint">সদস্য পরেও যোগ করা যাবে।</string>
+    <string name="join_sheet_id">মেস শিট আইডি</string>
+    <string name="join_sheet_id_hint">শিট লিংক থেকে আইডি কপি করে বসান</string>
+    <string name="join_scan_qr">QR কোড স্ক্যান করুন</string>
+    <string name="join_button">মেসে যোগ দিন</string>
+    <string name="join_waiting">ম্যানেজার আপনাকে যোগ করার অপেক্ষায়…</string>
+    <string name="guest_meals">অতিথির খাবার</string>
+    <string name="add_bazar">বাজার যোগ করুন</string>
+    <string name="add_bill">বিল যোগ করুন</string>
+    <string name="add_deposit">জমা যোগ করুন</string>
+    <string name="add_member">সদস্য যোগ করুন</string>
+    <string name="deposits_list">জমার তালিকা</string>
+    <string name="utilities_list">বিলের তালিকা</string>
+    <string name="bazar_list">বাজারের তালিকা</string>
+    <string name="next_cutoff">পরবর্তী সময়সীমা</string>
+    <string name="role_manager_short">ম্যানেজার</string>
+    <string name="role_member_short">সদস্য</string>
+    <string name="month_closed">বন্ধ</string>
+    <string name="export_pdf_title">মাসিক হিসাব</string>
+    <string name="pdf_share_subject">মেসমেট বিডি – মাসিক হিসাব</string>
+    <string name="audit_action">কাজ</string>
+    <string name="audit_actor">কে</string>
+    <string name="settings_close_month">এই মাস বন্ধ করুন</string>
+    <string name="settings_leave_mess">মেস ছেড়ে দিন</string>
+    <string name="qr_invite_description">মেসমেট অ্যাপ দিয়ে এই কোড স্ক্যান করে মেসে যোগ দিন।</string>
+    <string name="scan_qr_hint">ক্যামেরা মেসের QR কোডের দিকে তাক করান।</string>
+    <string name="camera_permission_needed">QR কোড স্ক্যান করতে ক্যামেরার অনুমতি দরকার।</string>
+    <string name="month">মাস</string>
 </resources>

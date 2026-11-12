@@ -6,6 +6,14 @@ import com.messmate.bd.auth.GoogleAuthManager
 import com.messmate.bd.core.network.AndroidNetworkMonitor
 import com.messmate.bd.core.network.NetworkMonitor
 import com.messmate.bd.data.local.MessDatabase
+import com.messmate.bd.data.local.dao.AuditLogDao
+import com.messmate.bd.data.local.dao.BazarDao
+import com.messmate.bd.data.local.dao.DepositDao
+import com.messmate.bd.data.local.dao.MealDao
+import com.messmate.bd.data.local.dao.MemberDao
+import com.messmate.bd.data.local.dao.MessDao
+import com.messmate.bd.data.local.dao.PendingOperationDao
+import com.messmate.bd.data.local.dao.UtilityBillDao
 import com.messmate.bd.data.remote.GoogleAccessTokenProvider
 import com.messmate.bd.data.repository.AccountRepositoryImpl
 import com.messmate.bd.data.repository.MessRepositoryImpl
@@ -71,6 +79,39 @@ object DatabaseModule {
             // schema migrations simple while the app is young).
             .fallbackToDestructiveMigration()
             .build()
+
+    @Provides
+    @Singleton
+    fun provideMessDao(database: MessDatabase): MessDao = database.messDao()
+
+    @Provides
+    @Singleton
+    fun provideMemberDao(database: MessDatabase): MemberDao = database.memberDao()
+
+    @Provides
+    @Singleton
+    fun provideMealDao(database: MessDatabase): MealDao = database.mealDao()
+
+    @Provides
+    @Singleton
+    fun provideBazarDao(database: MessDatabase): BazarDao = database.bazarDao()
+
+    @Provides
+    @Singleton
+    fun provideUtilityBillDao(database: MessDatabase): UtilityBillDao = database.utilityBillDao()
+
+    @Provides
+    @Singleton
+    fun provideDepositDao(database: MessDatabase): DepositDao = database.depositDao()
+
+    @Provides
+    @Singleton
+    fun provideAuditLogDao(database: MessDatabase): AuditLogDao = database.auditLogDao()
+
+    @Provides
+    @Singleton
+    fun providePendingOperationDao(database: MessDatabase): PendingOperationDao =
+        database.pendingOperationDao()
 }
 
 /**

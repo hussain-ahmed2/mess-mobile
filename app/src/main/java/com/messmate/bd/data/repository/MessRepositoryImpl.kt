@@ -44,6 +44,7 @@ import com.messmate.bd.domain.model.MemberStatement
 import com.messmate.bd.domain.model.Mess
 import com.messmate.bd.domain.model.MessBlueprint
 import com.messmate.bd.domain.model.MessConfig
+import com.messmate.bd.domain.model.MessTotals
 import com.messmate.bd.domain.model.Role
 import com.messmate.bd.domain.model.SheetSchema
 import com.messmate.bd.domain.model.SheetSchema.Tabs
@@ -57,8 +58,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.decodeToString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Clock
 import java.time.LocalDate
@@ -213,6 +212,30 @@ class MessRepositoryImpl @Inject constructor(
                 )
             }
         }
+
+    /**
+     * The headline numbers of the `Summary` tab.
+     *
+     * They are computed locally with the same rules the sheet uses, so the
+     * dashboard shows the correct numbers even while offline.
+     */
+    override fun observeTotals(): Flow<MessTotals> = combine(
+        observeBazar(),
+        observeMeals(),
+        observeUtilityBills(),
+        observeConfig(),
+    ) { bazar, meals, bills, config ->
+        if (config == null) {
+            MessTotals(totalBazar = 0.0, totalMeals = 0.0, liveMealRate = 0.0, totalEqualUtilities = 0.0)
+        } else {
+            CalculationEngine.totals(
+                bazar = bazar,
+                meals = meals,
+                bills = bills,
+                breakfastWeight = config.breakfastWeight,
+            )
+        }
+    }
 
     override fun observePendingSyncCount(): Flow<Int> =
         messDao.observeActiveMess().flatMapLatest { mess ->

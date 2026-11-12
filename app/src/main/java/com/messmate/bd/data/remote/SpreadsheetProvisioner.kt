@@ -118,7 +118,7 @@ class SpreadsheetProvisioner @Inject constructor(
                     nowIso(),
                     blueprint.managerEmail,
                     ActionType.MESS_CREATED.sheetValue,
-                    "Mess \"${blueprint.messName}\" created for $monthLabel(month) " +
+                    "Mess \"${blueprint.messName}\" created for ${monthLabel(month)} " +
                         "with ${members.size} member(s); sheet shared with " +
                         "${shareOutcome.granted.size} account(s).",
                 ),

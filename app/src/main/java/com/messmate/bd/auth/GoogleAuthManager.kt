@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Base64
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
@@ -90,7 +91,14 @@ class GoogleAuthManager @Inject constructor(
             .setCredentialOptions(listOf(option))
             .build()
 
-        val response = credentialManager.getCredential(context = context, request = request)
+        val response = try {
+            credentialManager.getCredential(context = context, request = request)
+        } catch (noCredential: NoCredentialException) {
+            throw IllegalStateException(
+                "No Google account is available on this device.",
+                noCredential,
+            )
+        }
         val credential = response.credential
         val googleCredential = when (credential) {
             is GoogleIdTokenCredential -> credential
@@ -149,8 +157,10 @@ class GoogleAuthManager @Inject constructor(
             // The user has to approve the scope in a consent screen.
             val deferred = CompletableDeferred<String?>()
             pendingAuthorization = deferred
+            val intentSender = result.pendingIntent?.intentSender
+                ?: throw IllegalStateException("Google did not provide the consent screen.")
             activity.startIntentSenderForResult(
-                result.pendingIntent.intentSender,
+                intentSender,
                 REQUEST_CODE_AUTHORIZATION,
                 null,
                 0,
