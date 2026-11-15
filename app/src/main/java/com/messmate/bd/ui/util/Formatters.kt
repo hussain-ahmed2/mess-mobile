@@ -62,6 +62,12 @@ object Formatters {
     fun monthKey(month: YearMonth): String =
         month.format(DateTimeFormatter.ofPattern("yyyy-MM"))
 
+    /**
+     * `1` or `1.5` – a meal count without a useless `.0` at the end.
+     */
+    fun meals(count: Double): String =
+        if (count == count.toLong().toDouble()) count.toLong().toString() else count.toString()
+
     /** `3h 12m` – the cut-off countdown. */
     fun duration(duration: java.time.Duration): String {
         val totalMinutes = duration.toMinutes().coerceAtLeast(0)

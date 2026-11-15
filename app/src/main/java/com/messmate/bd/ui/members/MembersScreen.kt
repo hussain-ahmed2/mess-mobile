@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -386,6 +388,7 @@ private fun AddMemberDialog(
 /**
  * The dialog that logs a deposit.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AddDepositDialog(
     members: List<Member>,
@@ -419,7 +422,8 @@ private fun AddDepositDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Five chips do not fit into one row on a narrow screen.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DepositMethod.entries.forEach { option ->
                         FilterChip(
                             selected = method == option,

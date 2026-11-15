@@ -115,7 +115,7 @@ fun UtilitiesScreen(
                     modifier = Modifier.weight(1f),
                 )
                 StatCard(
-                    label = stringResource(R.string.utilities_split_custom),
+                    label = stringResource(R.string.utilities_total_custom),
                     value = Formatters.moneyShort(customTotal),
                     modifier = Modifier.weight(1f),
                 )

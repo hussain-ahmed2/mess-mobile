@@ -186,4 +186,5 @@
     <string name="action_grant_access">অনুমতি দিন</string>
     <string name="dashboard_member_picker">কার খাবার?</string>
     <string name="dashboard_my_meals">আমার খাবার</string>
+    <string name="utilities_total_custom">ব্যক্তিগত চার্জ</string>
 </resources>

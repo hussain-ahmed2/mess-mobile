@@ -270,7 +270,7 @@ private fun BalanceCard(state: HomeUiState) {
             if (statement != null) {
                 Text(
                     text = "${stringResource(R.string.statement_meals)}: " +
-                        "${statement.totalMeals}   ·   " +
+                        "${Formatters.meals(statement.totalMeals)}   ·   " +
                         "${stringResource(R.string.statement_total_cost)}: " +
                         Formatters.money(statement.totalCost),
                     style = MaterialTheme.typography.bodySmall,
