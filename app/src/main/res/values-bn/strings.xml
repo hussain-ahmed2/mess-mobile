@@ -184,4 +184,6 @@
     <string name="consent_needed_title">গুগল অনুমতি দরকার</string>
     <string name="consent_needed_text">মেস শিট পড়া ও লেখার জন্য আবার অনুমতি দিতে হবে।</string>
     <string name="action_grant_access">অনুমতি দিন</string>
+    <string name="dashboard_member_picker">কার খাবার?</string>
+    <string name="dashboard_my_meals">আমার খাবার</string>
 </resources>

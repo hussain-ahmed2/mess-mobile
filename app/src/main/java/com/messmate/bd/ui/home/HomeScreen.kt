@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.ShoppingBasket
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +66,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val members by viewModel.members.collectAsStateWithLifecycle()
 
     // Failed writes are reported as a snackbar.
     val event by viewModel.events.collectAsStateWithLifecycle()
@@ -144,6 +146,17 @@ fun HomeScreen(
                 BalanceCard(state = state)
             }
 
+            if (state.isManager && members.size > 1) {
+                item {
+                    MemberPicker(
+                        members = members,
+                        selectedMemberId = state.selectedMemberId,
+                        myMemberId = state.myMemberId,
+                        onSelect = viewModel::selectMember,
+                    )
+                }
+            }
+
             item {
                 MealSection(
                     title = stringResource(R.string.dashboard_today_meals),
@@ -175,6 +188,38 @@ fun HomeScreen(
             }
 
             item { Spacer(modifier = Modifier.height(8.dp)) }
+        }
+    }
+}
+
+/**
+ * Lets the manager open the meals of another member – the only way to correct
+ * a meal that is already locked by the cut-off.
+ */
+@Composable
+private fun MemberPicker(
+    members: List<com.messmate.bd.domain.model.Member>,
+    selectedMemberId: String?,
+    myMemberId: String?,
+    onSelect: (String?) -> Unit,
+) {
+    SectionCard(title = stringResource(R.string.dashboard_member_picker)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = selectedMemberId == null,
+                onClick = { onSelect(null) },
+                label = { Text(stringResource(R.string.dashboard_my_meals)) },
+            )
+            members.filter { it.memberId != myMemberId }.forEach { member ->
+                FilterChip(
+                    selected = selectedMemberId == member.memberId,
+                    onClick = { onSelect(member.memberId) },
+                    label = { Text(member.name) },
+                )
+            }
         }
     }
 }

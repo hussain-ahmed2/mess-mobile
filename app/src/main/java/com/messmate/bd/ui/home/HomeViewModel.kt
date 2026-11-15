@@ -41,6 +41,18 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /** The member whose meals are shown – `null` means "my own meals". */
+    private val _selectedMemberId = MutableStateFlow<String?>(null)
+    val selectedMemberId: StateFlow<String?> = _selectedMemberId.asStateFlow()
+
+    /** All members – the manager can pick one to correct their meals. */
+    val members: StateFlow<List<com.messmate.bd.domain.model.Member>> =
+        messRepository.observeMembers().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList(),
+        )
+
     private val _events = MutableStateFlow<HomeEvent?>(null)
     val events: StateFlow<HomeEvent?> = _events.asStateFlow()
 
@@ -58,8 +70,9 @@ class HomeViewModel @Inject constructor(
             messRepository.observePendingSyncCount(),
         ) { meals, pending -> meals to pending },
         ticker,
-    ) { data, (meals, pending), _ ->
-        data.toState(meals, pending, cutoffPolicy)
+        _selectedMemberId,
+    ) { data, (meals, pending), _, selectedMemberId ->
+        data.toState(meals, pending, cutoffPolicy, selectedMemberId)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -72,8 +85,21 @@ class HomeViewModel @Inject constructor(
      * The repository enforces the cut-off rules – the UI only mirrors them so
      * that the button can be disabled in time.
      */
+    /**
+     * The member whose meals are shown on the dashboard.
+     *
+     * A member always sees their own meals; the manager can pick any member to
+     * correct a locked meal.
+     */
+    fun activeMemberId(): String? = _selectedMemberId.value ?: state.value.myMemberId
+
+    /** Selects the member whose meals are shown (`null` = my own meals). */
+    fun selectMember(memberId: String?) {
+        _selectedMemberId.value = memberId
+    }
+
     fun toggleMeal(date: LocalDate, type: MealType, enabled: Boolean) {
-        val memberId = state.value.myMemberId ?: return
+        val memberId = activeMemberId() ?: return
         viewModelScope.launch {
             messRepository.setMeal(memberId, date, type, enabled).onFailure { error ->
                 _events.value = HomeEvent.Message(error.message ?: "Could not change the meal.")
@@ -83,7 +109,7 @@ class HomeViewModel @Inject constructor(
 
     /** Sets the number of guest meals of a day. */
     fun setGuestMeals(date: LocalDate, count: Int) {
-        val memberId = state.value.myMemberId ?: return
+        val memberId = activeMemberId() ?: return
         viewModelScope.launch {
             messRepository.setGuestMeals(memberId, date, count).onFailure { error ->
                 _events.value = HomeEvent.Message(error.message ?: "Could not update the guest meals.")
@@ -116,6 +142,8 @@ data class HomeUiState(
     val month: YearMonth = YearMonth.now(),
     val isManager: Boolean = false,
     val myMemberId: String? = null,
+    /** The member the manager picked (null = my own meals). */
+    val selectedMemberId: String? = null,
     val totals: MessTotals = MessTotals(0.0, 0.0, 0.0, 0.0),
     val myStatement: MemberStatement? = null,
     val today: List<MealToggleUi> = emptyList(),
@@ -154,9 +182,11 @@ private fun DashboardData.toState(
     meals: List<com.messmate.bd.domain.model.MealEntry>,
     pendingSync: Int,
     cutoffPolicy: CutoffPolicy,
+    selectedMemberId: String?,
 ): HomeUiState {
     val config = config
-    val myMemberId = mess?.myMemberId
+    // The manager may look at (and correct) the meals of any member.
+    val myMemberId = selectedMemberId ?: mess?.myMemberId
     val today = LocalDate.now()
     val tomorrow = today.plusDays(1)
 
@@ -185,6 +215,7 @@ private fun DashboardData.toState(
         month = config?.monthYear ?: mess?.monthYear ?: YearMonth.now(),
         isManager = mess?.isManager == true,
         myMemberId = myMemberId,
+        selectedMemberId = selectedMemberId,
         totals = totals,
         myStatement = statements.firstOrNull { it.member.memberId == myMemberId },
         today = togglesFor(today),

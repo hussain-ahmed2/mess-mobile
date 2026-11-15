@@ -184,4 +184,6 @@
     <string name="consent_needed_title">Google access needed</string>
     <string name="consent_needed_text">MessMate needs access to the mess sheet again. Please grant the permission so the sheet can be read and written.</string>
     <string name="action_grant_access">Grant access</string>
+    <string name="dashboard_member_picker">Whose meals?</string>
+    <string name="dashboard_my_meals">My meals</string>
 </resources>
