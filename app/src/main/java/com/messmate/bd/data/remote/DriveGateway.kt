@@ -18,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class DriveGateway @Inject constructor(
     private val apiFactory: GoogleApiFactory,
+    private val tokenProvider: GoogleAccessTokenProvider,
 ) {
 
     private val service: Drive by lazy { apiFactory.createDriveService() }
@@ -31,6 +32,7 @@ class DriveGateway @Inject constructor(
      */
     suspend fun createSpreadsheet(name: String, description: String? = null): DriveFileInfo =
         withContext(Dispatchers.IO) {
+            tokenProvider.refreshIfNeeded()
             val file = File()
                 .setName(name)
                 .setMimeType(MIME_TYPE_SPREADSHEET)
@@ -50,6 +52,7 @@ class DriveGateway @Inject constructor(
 
     /** Metadata of a single file – `null` when the app has no access to it. */
     suspend fun getFile(fileId: String): DriveFileInfo? = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         runCatching {
             val file = service.files().get(fileId)
                 .setFields("id,name,mimeType,webViewLink")
@@ -65,6 +68,7 @@ class DriveGateway @Inject constructor(
 
     /** Renames a file – used when a month is closed ("… – 2026-11 (Closed)"). */
     suspend fun renameFile(fileId: String, newName: String): Unit = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         val file = File().setName(newName)
         service.files().update(fileId, file).setFields("id,name").execute()
     }
@@ -85,6 +89,7 @@ class DriveGateway @Inject constructor(
         emails: List<String>,
         sendNotification: Boolean = true,
     ): ShareOutcome = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         val granted = mutableListOf<String>()
         val failed = mutableListOf<Pair<String, String>>()
 
@@ -111,6 +116,7 @@ class DriveGateway @Inject constructor(
 
     /** Removes a member's access (used when a member leaves the mess). */
     suspend fun revokeAccess(fileId: String, email: String): Boolean = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         runCatching {
             val permission = Permission().setType(TYPE_USER).setRole(ROLE_WRITER).setEmailAddress(email)
             val created = service.permissions().create(fileId, permission)
@@ -126,6 +132,7 @@ class DriveGateway @Inject constructor(
      * provisioned completely.
      */
     suspend fun deleteFile(fileId: String): Boolean = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         runCatching {
             service.files().delete(fileId).execute()
             true
@@ -137,6 +144,7 @@ class DriveGateway @Inject constructor(
      * user picked). Used by the "join a mess" screen to offer a shortlist.
      */
     suspend fun listAccessibleSpreadsheets(): List<DriveFileInfo> = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         runCatching {
             service.files().list()
                 .setQ("mimeType='$MIME_TYPE_SPREADSHEET' and trashed=false")

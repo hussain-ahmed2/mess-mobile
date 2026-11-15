@@ -20,7 +20,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import java.security.SecureRandom
 import java.util.concurrent.atomic.AtomicBoolean
@@ -63,6 +62,14 @@ class GoogleAuthManager @Inject constructor(
     /** Guards against two concurrent refresh attempts. */
     private val refreshing = AtomicBoolean(false)
 
+    private val _needsConsent = MutableStateFlow(false)
+
+    /**
+     * `true` when Google wants the user to grant the `drive.file` scope again
+     * (the consent was revoked or the app lost it).
+     */
+    val needsConsent: StateFlow<Boolean> = _needsConsent.asStateFlow()
+
     /** Completes when the scope consent screen returns with a result. */
     private var pendingAuthorization: CompletableDeferred<String?>? = null
 
@@ -78,7 +85,7 @@ class GoogleAuthManager @Inject constructor(
      * Runs the interactive sign-in flow and stores the identity in the
      * encrypted session.
      */
-    suspend fun signIn(): Result<GoogleSession> = runCatching {
+    suspend fun signIn(activity: Activity): Result<GoogleSession> = runCatching {
         check(isConfigured) {
             "No Google client id configured – add MESSMATE_SERVER_CLIENT_ID to local.properties."
         }
@@ -91,8 +98,9 @@ class GoogleAuthManager @Inject constructor(
             .setCredentialOptions(listOf(option))
             .build()
 
+        // The selector UI is a bottom sheet – it needs an Activity context.
         val response = try {
-            credentialManager.getCredential(context = context, request = request)
+            credentialManager.getCredential(context = activity, request = request)
         } catch (noCredential: NoCredentialException) {
             throw IllegalStateException(
                 "No Google account is available on this device.",
@@ -130,6 +138,7 @@ class GoogleAuthManager @Inject constructor(
     fun signOut() {
         sessionStore.clear()
         _session.value = null
+        _needsConsent.value = false
     }
 
     // =======================================================================
@@ -215,19 +224,30 @@ class GoogleAuthManager @Inject constructor(
     // =======================================================================
 
     /**
-     * Returns a token that can be used right now.
+     * The cached access token – no network, no blocking.
      *
-     * Called from the HTTP interceptor → must be blocking.
+     * The token is renewed **before** a request (see [refreshIfNeeded]), never
+     * inside the HTTP interceptor – blocking there could deadlock with the
+     * main thread.
      */
     override fun currentToken(): String? {
         val session = _session.value ?: return null
-        if (session.accessToken.isEmpty()) return null
-        if (!session.isExpired(System.currentTimeMillis())) return session.accessToken
+        return session.accessToken.takeIf { it.isNotEmpty() }
+    }
 
-        // The token expired – ask GMS for a new one. The scope is already
-        // granted, so this does not show any UI.
-        val refreshed = runBlocking { refreshAccessToken() }
-        return refreshed ?: session.accessToken
+    /**
+     * Renews the access token when it is expired.
+     *
+     * @return `true` when a valid token is available afterwards.
+     */
+    override suspend fun refreshIfNeeded(): Boolean {
+        val session = _session.value ?: return false
+        if (session.accessToken.isEmpty()) return false
+        if (!session.isExpired(System.currentTimeMillis())) return true
+
+        val token = refreshAccessToken()
+        _needsConsent.value = token == null
+        return token != null
     }
 
     /** Drops a token the API rejected (HTTP 401). */
@@ -252,7 +272,9 @@ class GoogleAuthManager @Inject constructor(
                 .build()
             val result = client.authorize(request).await()
             if (result.hasResolution()) {
-                // The user has to approve again – the UI layer handles that.
+                // The user has to approve the scope again – the UI layer
+                // offers the consent screen when `needsConsent` is `true`.
+                _needsConsent.value = true
                 null
             } else {
                 result.accessToken?.also { token ->

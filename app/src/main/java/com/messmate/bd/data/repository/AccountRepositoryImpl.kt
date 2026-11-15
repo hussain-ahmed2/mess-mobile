@@ -45,8 +45,8 @@ class AccountRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun signIn(onError: (String) -> Unit): Boolean =
-        googleAuthManager.signIn().fold(
+    override suspend fun signIn(activity: Activity, onError: (String) -> Unit): Boolean =
+        googleAuthManager.signIn(activity).fold(
             onSuccess = { true },
             onFailure = { error ->
                 onError(error.message ?: "Google sign-in failed.")
@@ -62,6 +62,8 @@ class AccountRepositoryImpl @Inject constructor(
                 false
             },
         )
+
+    override fun observeNeedsConsent(): Flow<Boolean> = googleAuthManager.needsConsent
 
     override suspend fun signOut() {
         googleAuthManager.signOut()

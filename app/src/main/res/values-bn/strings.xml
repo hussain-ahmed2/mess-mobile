@@ -181,4 +181,7 @@
     <string name="scan_qr_hint">ক্যামেরা মেসের QR কোডের দিকে তাক করান।</string>
     <string name="camera_permission_needed">QR কোড স্ক্যান করতে ক্যামেরার অনুমতি দরকার।</string>
     <string name="month">মাস</string>
+    <string name="consent_needed_title">গুগল অনুমতি দরকার</string>
+    <string name="consent_needed_text">মেস শিট পড়া ও লেখার জন্য আবার অনুমতি দিতে হবে।</string>
+    <string name="action_grant_access">অনুমতি দিন</string>
 </resources>

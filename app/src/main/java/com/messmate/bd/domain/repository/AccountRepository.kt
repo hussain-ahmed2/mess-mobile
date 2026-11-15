@@ -26,10 +26,12 @@ interface AccountRepository {
     /**
      * Starts the Google sign-in flow.
      *
+     * @param activity the activity that hosts the account picker – Credential
+     *        Manager needs an Activity context for its bottom sheet.
      * @param onError called with a human readable message when the flow fails.
      * @return `true` when the user signed in successfully.
      */
-    suspend fun signIn(onError: (String) -> Unit): Boolean
+    suspend fun signIn(activity: Activity, onError: (String) -> Unit): Boolean
 
     /**
      * Requests the `drive.file` scope and returns an access token.
@@ -37,6 +39,12 @@ interface AccountRepository {
      * The first call shows the Google consent screen.
      */
     suspend fun requestAccessToken(activity: Activity, onError: (String) -> Unit): Boolean
+
+    /**
+     * `true` when Google wants the user to grant the scope again (the consent
+     * was revoked or the app lost it).
+     */
+    fun observeNeedsConsent(): Flow<Boolean>
 
     /** Signs the user out and clears the cached session. */
     suspend fun signOut()

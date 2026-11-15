@@ -1,16 +1,20 @@
 package com.messmate.bd.ui.navigation
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.messmate.bd.R
 import com.messmate.bd.ui.audit.AuditScreen
 import com.messmate.bd.ui.bazar.BazarScreen
 import com.messmate.bd.ui.components.LoadingBox
@@ -46,6 +51,8 @@ fun MessMateNavHost(modifier: Modifier = Modifier) {
     val rootState by rootViewModel.state.collectAsStateWithLifecycle()
     val navController = rememberNavController()
 
+    val activity = LocalActivity.current
+
     Box(modifier = modifier.fillMaxSize()) {
         when {
             rootState.isLoading -> LoadingBox()
@@ -54,6 +61,23 @@ fun MessMateNavHost(modifier: Modifier = Modifier) {
 
             else -> MainGraph(navController)
         }
+    }
+
+    // The Google consent expired – every API call would fail until the user
+    // grants the `drive.file` scope again.
+    if (rootState.needsConsent) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text(stringResource(R.string.consent_needed_title)) },
+            text = { Text(stringResource(R.string.consent_needed_text)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        activity?.let { rootViewModel.grantAccess(it) { } }
+                    },
+                ) { Text(stringResource(R.string.action_grant_access)) }
+            },
+        )
     }
 }
 

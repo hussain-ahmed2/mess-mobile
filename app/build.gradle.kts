@@ -17,6 +17,26 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+/**
+ * Reads a `.env` file (KEY=VALUE per line) from the project root.
+ *
+ * The OAuth client id can be kept there instead of `local.properties` – it is
+ * read at build time and compiled into `BuildConfig`.
+ */
+fun readDotEnv(file: File): Map<String, String> {
+    if (!file.exists()) return emptyMap()
+    return file.readLines()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains("=") }
+        .associate { line ->
+            val key = line.substringBefore("=").trim()
+            val value = line.substringAfter("=").trim().trim('"').trim('\'')
+            key to value
+        }
+}
+
+val dotEnv = readDotEnv(rootProject.file(".env"))
+
 android {
     namespace = "com.messmate.bd"
 
@@ -38,14 +58,21 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
-        // OAuth client id of the Google Cloud project (client_type = 3).
-        // Read from local.properties, then from -P / environment variables.
-        val serverClientId: String = (
-            localProperties.getProperty("MESSMATE_SERVER_CLIENT_ID")
-                ?: providers.gradleProperty("MESSMATE_SERVER_CLIENT_ID").orNull
-                ?: System.getenv("MESSMATE_SERVER_CLIENT_ID")
-                ?: ""
-            ).trim()
+        // OAuth client id of the Google Cloud project – it must be the id of
+        // the **Web application** client (client_type = 3), because Credential
+        // Manager and the GMS AuthorizationClient use it as the server client.
+        //
+        // Looked up in this order: local.properties → .env → -P → environment.
+        val clientIdCandidates: List<String?> = listOf(
+            localProperties.getProperty("MESSMATE_SERVER_CLIENT_ID"),
+            dotEnv["MESSMATE_SERVER_CLIENT_ID"],
+            dotEnv["WEB_CLIENT_ID"],
+            providers.gradleProperty("MESSMATE_SERVER_CLIENT_ID").orNull,
+            System.getenv("MESSMATE_SERVER_CLIENT_ID"),
+            System.getenv("WEB_CLIENT_ID"),
+        )
+        val serverClientId: String =
+            clientIdCandidates.firstOrNull { !it.isNullOrBlank() }?.trim() ?: ""
 
         buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"$serverClientId\"")
     }

@@ -33,6 +33,7 @@ import javax.inject.Singleton
 @Singleton
 class SheetsGateway @Inject constructor(
     private val apiFactory: GoogleApiFactory,
+    private val tokenProvider: GoogleAccessTokenProvider,
 ) {
 
     /** Lazily created client – building it is expensive (TLS + JSON factory). */
@@ -53,6 +54,7 @@ class SheetsGateway @Inject constructor(
         ranges: List<String>,
     ): Map<String, List<List<String>>> = withContext(Dispatchers.IO) {
         if (ranges.isEmpty()) return@withContext emptyMap()
+        tokenProvider.refreshIfNeeded()
 
         val response = service.spreadsheets().values().batchGet(spreadsheetId)
             .setRanges(ranges)
@@ -94,6 +96,7 @@ class SheetsGateway @Inject constructor(
         inputOption: SheetInputOption = SheetInputOption.RAW,
     ): Unit = withContext(Dispatchers.IO) {
         if (ranges.isEmpty()) return@withContext
+        tokenProvider.refreshIfNeeded()
 
         val data = ranges.map { range ->
             ValueRange()
@@ -122,6 +125,7 @@ class SheetsGateway @Inject constructor(
         inputOption: SheetInputOption = SheetInputOption.RAW,
     ): Unit = withContext(Dispatchers.IO) {
         if (rows.isEmpty()) return@withContext
+        tokenProvider.refreshIfNeeded()
 
         // The range decides where the rows are appended and how wide they are
         // ("Bazar!A:G" = the full width of the tab).
@@ -141,6 +145,7 @@ class SheetsGateway @Inject constructor(
 
     /** Clears a range (used when a member is removed from the grid). */
     suspend fun clear(spreadsheetId: String, range: String): Unit = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         service.spreadsheets().values()
             .clear(spreadsheetId, range, ClearValuesRequest())
             .execute()
@@ -152,6 +157,7 @@ class SheetsGateway @Inject constructor(
 
     /** Loads the spreadsheet metadata (tab names, ids, order). */
     suspend fun getSpreadsheet(spreadsheetId: String): Spreadsheet = withContext(Dispatchers.IO) {
+        tokenProvider.refreshIfNeeded()
         service.spreadsheets().get(spreadsheetId).execute()
     }
 
@@ -164,6 +170,7 @@ class SheetsGateway @Inject constructor(
      */
     suspend fun ensureTabs(spreadsheetId: String, desiredTabs: List<String>) {
         withContext(Dispatchers.IO) {
+            tokenProvider.refreshIfNeeded()
             val spreadsheet = service.spreadsheets().get(spreadsheetId).execute()
             val existing = spreadsheet.getSheets()?.map { it.properties.title }.orEmpty()
 

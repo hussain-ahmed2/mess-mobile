@@ -35,7 +35,7 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isBusy = true, error = null)
 
-            val signedIn = accountRepository.signIn { error ->
+            val signedIn = accountRepository.signIn(activity) { error ->
                 _state.value = _state.value.copy(error = error)
             }
             if (!signedIn) {

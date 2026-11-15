@@ -2,6 +2,7 @@ package com.messmate.bd.data.remote
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpExecuteInterceptor
+import com.google.api.client.http.HttpUnsuccessfulResponseHandler
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
@@ -70,9 +71,19 @@ class GoogleApiFactory @Inject constructor(
                 ?: throw IOException("No Google account signed in – cannot talk to Drive/Sheets")
             httpRequest.headers.setAuthorization("Bearer $token")
         }
+
+        // A rejected token is dropped from the cache, so the next request
+        // mints a fresh one instead of failing with the same 401.
+        request.unsuccessfulResponseHandler = HttpUnsuccessfulResponseHandler { _, response, _ ->
+            if (response.statusCode == HTTP_UNAUTHORIZED) {
+                tokenProvider.currentToken()?.let(tokenProvider::invalidate)
+            }
+            false // never retry automatically
+        }
     }
 
     private companion object {
         const val APPLICATION_NAME = "MessMate BD"
+        const val HTTP_UNAUTHORIZED = 401
     }
 }
