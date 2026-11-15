@@ -25,6 +25,7 @@ import com.messmate.bd.data.local.entity.UtilityBillEntity
 import com.messmate.bd.data.mapper.SheetMappers
 import com.messmate.bd.data.mapper.SheetMappers.toDomain
 import com.messmate.bd.data.remote.DriveGateway
+import com.messmate.bd.data.remote.GoogleApiErrors
 import com.messmate.bd.data.remote.MonthRolloverService
 import com.messmate.bd.data.remote.SheetsGateway
 import com.messmate.bd.data.remote.SpreadsheetProvisioner
@@ -429,7 +430,7 @@ class MessRepositoryImpl @Inject constructor(
         val config = requireConfig()
         val role = currentRole()
 
-        check(config.isLocked) { "This month is closed – no changes possible." }
+        check(!config.isLocked) { "This month is closed – no changes possible." }
         check(cutoffPolicy.canEdit(config, role, mealType, date)) {
             "The cut-off for ${mealType.name.lowercase()} has passed – only the manager can change it."
         }
@@ -498,7 +499,7 @@ class MessRepositoryImpl @Inject constructor(
         val config = requireConfig()
         val role = currentRole()
 
-        check(config.isLocked) { "This month is closed – no changes possible." }
+        check(!config.isLocked) { "This month is closed – no changes possible." }
         check(role == Role.MANAGER || memberId == requireMessEntity().myMemberId) {
             "You can only change your own meals."
         }
@@ -1154,7 +1155,14 @@ class MessRepositoryImpl @Inject constructor(
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Throwable) {
-        Result.failure(error)
+        // The Google APIs answer with a huge JSON body – only the readable
+        // part is shown to the user.
+        Result.failure(
+            IllegalStateException(
+                GoogleApiErrors.shorten(error.message),
+                error,
+            ),
+        )
     }
 
     // -----------------------------------------------------------------------

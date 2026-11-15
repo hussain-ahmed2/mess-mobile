@@ -68,28 +68,24 @@ object SummaryFormulaBuilder {
     // -----------------------------------------------------------------------
 
     /**
-     * `[["TotalBazar", "=SUM(...)"], ["TotalMeals", "=..."], …]`
+     * Row 1 of the `Summary` tab – **one** row with eight cells:
      *
-     * The layout is `label | value | label | value | label | value | label | value`
-     * so that the block reads nicely on a phone.
+     * `label | value | label | value | label | value | label | value`
+     *
+     * The four headline numbers sit next to each other so the block reads
+     * nicely on a phone.
      */
     fun metricBlock(): List<List<String>> = listOf(
         listOf(
             "TotalBazar",
             "=SUM($bazarAmount)",
-        ),
-        listOf(
             "TotalMeals",
             "=SUM($mealsBreakfast)*$breakfastWeight" +
                 "+SUM($mealsLunch)" +
                 "+SUM($mealsDinner)" +
                 "+SUM($mealsGuest)",
-        ),
-        listOf(
             "LiveMealRate",
             "=IFERROR(${SheetSchema.Summary.CELL_TOTAL_BAZAR}/${SheetSchema.Summary.CELL_TOTAL_MEALS},0)",
-        ),
-        listOf(
             "TotalEqualUtilities",
             "=SUMIFS($utilityAmount,$utilitySplitType,\"EQUAL_ALL\")",
         ),
@@ -103,12 +99,8 @@ object SummaryFormulaBuilder {
         listOf(
             "Mess",
             "=${Tabs.CONFIG}!\$B\$${SheetSchema.Config.ROW_MESS_NAME}",
-        ),
-        listOf(
             "Month",
             "=${Tabs.CONFIG}!\$B\$${SheetSchema.Config.ROW_MONTH_YEAR}",
-        ),
-        listOf(
             "Meal rate = TotalBazar / TotalMeals",
             "",
         ),

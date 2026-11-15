@@ -207,6 +207,9 @@ class SheetsGateway @Inject constructor(
                 ?.map { sheet ->
                     Request().setUpdateSheetProperties(
                         UpdateSheetPropertiesRequest()
+                            // The field mask tells the API which property is
+                            // changed - without it the request is rejected.
+                            .setFields("gridProperties.frozenRowCount")
                             .setProperties(
                                 SheetProperties()
                                     .setSheetId(sheet.properties.sheetId)

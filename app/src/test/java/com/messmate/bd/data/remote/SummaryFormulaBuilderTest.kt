@@ -15,16 +15,18 @@ class SummaryFormulaBuilderTest {
     fun `metric block contains the four headline numbers`() {
         val block = SummaryFormulaBuilder.metricBlock()
 
-        assertEquals(4, block.size)
+        // One row with eight cells: label | value | label | value | …
+        assertEquals(1, block.size)
+        assertEquals(8, block[0].size)
         assertEquals("TotalBazar", block[0][0])
-        assertEquals("TotalMeals", block[1][0])
-        assertEquals("LiveMealRate", block[2][0])
-        assertEquals("TotalEqualUtilities", block[3][0])
+        assertEquals("TotalMeals", block[0][2])
+        assertEquals("LiveMealRate", block[0][4])
+        assertEquals("TotalEqualUtilities", block[0][6])
 
         assertTrue(block[0][1].startsWith("=SUM(Bazar!"))
-        assertTrue(block[1][1].contains("Config!\$B\$${SheetSchema.Config.ROW_BREAKFAST_WEIGHT}"))
-        assertTrue(block[2][1].contains("\$B\$1") && block[2][1].contains("\$D\$1"))
-        assertTrue(block[3][1].contains("\"EQUAL_ALL\""))
+        assertTrue(block[0][3].contains("Config!\$B\$${SheetSchema.Config.ROW_BREAKFAST_WEIGHT}"))
+        assertTrue(block[0][5].contains("\$B\$1") && block[0][5].contains("\$D\$1"))
+        assertTrue(block[0][7].contains("\"EQUAL_ALL\""))
     }
 
     @Test

@@ -177,9 +177,14 @@ private fun MainGraph(navController: NavHostController) {
                     onOpenSettings = { navController.navigate(Destination.Settings.route) },
                 )
             }
-            composable(Destination.Audit.route) { AuditScreen() }
+            composable(Destination.Audit.route) {
+                AuditScreen(onBack = { navController.popBackStack() })
+            }
             composable(Destination.Settings.route) {
-                SettingsScreen(onOpenAudit = { navController.navigate(Destination.Audit.route) })
+                SettingsScreen(
+                    onOpenAudit = { navController.navigate(Destination.Audit.route) },
+                    onBack = { navController.popBackStack() },
+                )
             }
         }
     }

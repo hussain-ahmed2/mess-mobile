@@ -56,9 +56,10 @@ class SpreadsheetProvisioner @Inject constructor(
     /**
      * Provisions a complete mess spreadsheet.
      *
-     * @throws Exception when the sheet could not be created – the caller is
-     *         responsible for cleaning up (the repository deletes the orphaned
-     *         file).
+     * When a step fails, the half built file is deleted again – an empty
+     * spreadsheet in the user's Drive would only be confusing.
+     *
+     * @throws Exception when the sheet could not be created.
      */
     suspend fun provision(blueprint: MessBlueprint): ProvisionedMess = withContext(Dispatchers.IO) {
         val month = blueprint.monthYear
@@ -74,63 +75,71 @@ class SpreadsheetProvisioner @Inject constructor(
             description = "Mess \"${blueprint.messName}\" managed with MessMate BD",
         )
 
-        // ------------------------------------------------------------------
-        // 2. Shape the tabs
-        // ------------------------------------------------------------------
-        sheetsGateway.ensureTabs(file.id, SheetSchema.Tabs.ALL)
+        try {
+            // --------------------------------------------------------------
+            // 2. Shape the tabs
+            // --------------------------------------------------------------
+            sheetsGateway.ensureTabs(file.id, SheetSchema.Tabs.ALL)
 
-        // ------------------------------------------------------------------
-        // 3. Static content (RAW → numbers stay numbers, dates stay text)
-        // ------------------------------------------------------------------
-        sheetsGateway.batchWrite(
-            spreadsheetId = file.id,
-            ranges = staticRanges(blueprint, members),
-            inputOption = SheetInputOption.RAW,
-        )
+            // --------------------------------------------------------------
+            // 3. Static content (RAW → numbers stay numbers, dates stay text)
+            // --------------------------------------------------------------
+            sheetsGateway.batchWrite(
+                spreadsheetId = file.id,
+                ranges = staticRanges(blueprint, members),
+                inputOption = SheetInputOption.RAW,
+            )
 
-        // ------------------------------------------------------------------
-        // 4. Formulas (USER_ENTERED → "=SUM(...)" becomes a real formula)
-        // ------------------------------------------------------------------
-        sheetsGateway.batchWrite(
-            spreadsheetId = file.id,
-            ranges = formulaRanges(memberIds),
-            inputOption = SheetInputOption.USER_ENTERED,
-        )
+            // --------------------------------------------------------------
+            // 4. Formulas (USER_ENTERED → "=SUM(...)" becomes a real formula)
+            // --------------------------------------------------------------
+            sheetsGateway.batchWrite(
+                spreadsheetId = file.id,
+                ranges = formulaRanges(memberIds),
+                inputOption = SheetInputOption.USER_ENTERED,
+            )
 
-        // ------------------------------------------------------------------
-        // 5. Share the file with the members
-        // ------------------------------------------------------------------
-        val shareOutcome = driveGateway.shareWithUsers(
-            fileId = file.id,
-            emails = members.map { it.gmail }.filter { it.isNotBlank() },
-            sendNotification = true,
-        )
+            // --------------------------------------------------------------
+            // 5. Share the file with the members
+            // --------------------------------------------------------------
+            val shareOutcome = driveGateway.shareWithUsers(
+                fileId = file.id,
+                // The manager owns the file – only the other members need access.
+                emails = members.map { it.gmail }
+                    .filter { it.isNotBlank() && !it.equals(blueprint.managerEmail, ignoreCase = true) },
+                sendNotification = true,
+            )
 
-        // ------------------------------------------------------------------
-        // 6. First audit entry
-        // ------------------------------------------------------------------
-        sheetsGateway.appendRows(
-            spreadsheetId = file.id,
-            tab = Tabs.AUDIT,
-            rows = listOf(
-                listOf(
-                    newId(),
-                    nowIso(),
-                    blueprint.managerEmail,
-                    ActionType.MESS_CREATED.sheetValue,
-                    "Mess \"${blueprint.messName}\" created for ${monthLabel(month)} " +
-                        "with ${members.size} member(s); sheet shared with " +
-                        "${shareOutcome.granted.size} account(s).",
+            // --------------------------------------------------------------
+            // 6. First audit entry
+            // --------------------------------------------------------------
+            sheetsGateway.appendRows(
+                spreadsheetId = file.id,
+                tab = Tabs.AUDIT,
+                rows = listOf(
+                    listOf(
+                        newId(),
+                        nowIso(),
+                        blueprint.managerEmail,
+                        ActionType.MESS_CREATED.sheetValue,
+                        "Mess \"${blueprint.messName}\" created for ${monthLabel(month)} " +
+                            "with ${members.size} member(s); sheet shared with " +
+                            "${shareOutcome.granted.size} account(s).",
+                    ),
                 ),
-            ),
-        )
+            )
 
-        ProvisionedMess(
-            spreadsheetId = file.id,
-            spreadsheetUrl = file.webViewLink,
-            fileName = fileName,
-            members = members,
-        )
+            ProvisionedMess(
+                spreadsheetId = file.id,
+                spreadsheetUrl = file.webViewLink,
+                fileName = fileName,
+                members = members,
+            )
+        } catch (error: Exception) {
+            // Do not leave a broken spreadsheet behind.
+            driveGateway.deleteFile(file.id)
+            throw error
+        }
     }
 
     /**
