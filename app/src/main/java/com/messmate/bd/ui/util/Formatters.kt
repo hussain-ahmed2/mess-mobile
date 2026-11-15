@@ -45,9 +45,14 @@ object Formatters {
     fun dateShort(date: LocalDate): String =
         date.format(DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH))
 
-    /** `07:00` */
+    /**
+     * `7:00 AM` – the app speaks 12 hour clock, the sheet keeps `07:00`.
+     *
+     * A mess runs from breakfast in the morning until dinner in the evening,
+     * so "7:00 AM" is a lot easier to read than "07:00".
+     */
     fun time(time: LocalTime): String =
-        time.format(DateTimeFormatter.ofPattern("HH:mm"))
+        time.format(DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH))
 
     /** `November 2026` */
     fun month(month: YearMonth): String =

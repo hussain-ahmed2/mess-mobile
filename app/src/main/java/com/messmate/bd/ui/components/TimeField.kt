@@ -50,7 +50,7 @@ fun TimeField(
         val state = rememberTimePickerState(
             initialHour = time.hour,
             initialMinute = time.minute,
-            is24Hour = true,
+            is24Hour = false,
         )
         // A plain AlertDialog is used instead of Material3's TimePickerDialog,
         // because the latter requires a title slot that this app does not need.
