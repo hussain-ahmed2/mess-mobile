@@ -1,6 +1,8 @@
 package com.messmate.bd.ui.join
 
+import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,6 +46,19 @@ import com.messmate.bd.R
 import com.messmate.bd.ui.components.ErrorBanner
 import com.messmate.bd.ui.components.LabeledField
 import com.messmate.bd.ui.components.SectionCard
+
+/**
+ * Resolves the spreadsheet id out of the uri of the system file picker.
+ *
+ * The picker returns `content://com.google.android.apps.docs.documents/…` –
+ * the document id inside it is the id of the spreadsheet.
+ */
+private fun resolveSpreadsheetId(context: Context, uri: Uri): String {
+    val documentId = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
+    return SpreadsheetIdExtractor.extract(documentId)
+        ?: SpreadsheetIdExtractor.extract(uri.toString())
+        ?: uri.toString()
+}
 
 /**
  * The "join an existing mess" screen.
@@ -69,11 +85,13 @@ fun JoinMessScreen(
         if (state.joined) onBack()
     }
 
-    // The system file picker – the returned uri contains the spreadsheet id.
+    // The system file picker – it returns a content uri that has to be
+    // resolved into the id of the spreadsheet.
+    val context = LocalContext.current
     val pickDocument = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
-        uri?.let { viewModel.onSpreadsheetIdDetected(it.toString()) }
+        uri?.let { viewModel.onSpreadsheetIdDetected(resolveSpreadsheetId(context, it)) }
     }
 
     // The QR scanner of the manager.

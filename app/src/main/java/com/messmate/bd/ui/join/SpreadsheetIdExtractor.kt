@@ -9,7 +9,12 @@ package com.messmate.bd.ui.join
  */
 object SpreadsheetIdExtractor {
 
-    private val ID_PATTERN = Regex("[a-zA-Z0-9-_]{20,}")
+    /**
+     * A Google file id is 44 characters long and mixes letters, digits, `-` and
+     * `_`. The pattern is strict on purpose – a loose one would also match
+     * parts of a `content://` uri and produce a wrong id.
+     */
+    private val ID_PATTERN = Regex("(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9_-]{28,64}")
 
     /** Returns the spreadsheet id or `null` when nothing usable was found. */
     fun extract(raw: String?): String? {
