@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.messmate.bd.domain.model.MemberStatement
 import com.messmate.bd.domain.model.MessConfig
+import com.messmate.bd.domain.model.MessTotals
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.time.YearMonth
@@ -34,11 +35,12 @@ class StatementPdfExporter @Inject constructor(
         messName: String,
         month: YearMonth,
         config: MessConfig,
+        totals: MessTotals,
         statements: List<MemberStatement>,
     ): Uri {
         val document = PdfDocument()
         try {
-            drawSummaryPage(document, messName, month, config, statements)
+            drawSummaryPage(document, messName, month, config, totals, statements)
             statements.forEach { statement ->
                 drawMemberPage(document, messName, month, statement)
             }
@@ -65,6 +67,7 @@ class StatementPdfExporter @Inject constructor(
         messName: String,
         month: YearMonth,
         config: MessConfig,
+        totals: MessTotals,
         statements: List<MemberStatement>,
     ) {
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
@@ -72,8 +75,10 @@ class StatementPdfExporter @Inject constructor(
 
         var y = drawHeader(page, messName, month.toString())
 
-        y = drawRow(page, y, "Total bazar", "")
-        y = drawRow(page, y, "Total meals", "")
+        y = drawRow(page, y, "Total bazar", totals.totalBazar.toString())
+        y = drawRow(page, y, "Total meals", totals.totalMeals.toString())
+        y = drawRow(page, y, "Live meal rate", totals.liveMealRate.toString())
+        y = drawRow(page, y, "Total equal utilities", totals.totalEqualUtilities.toString())
         y = drawRow(page, y, "Breakfast weight", config.breakfastWeight.toString())
         y = drawRow(page, y, "Members", statements.size.toString())
         y += 16f

@@ -714,6 +714,11 @@ class MessRepositoryImpl @Inject constructor(
         val config = requireConfig()
         check(!config.isLocked) { "This month is closed – no new members possible." }
 
+        // The member ids have to be unique across **all** devices – a member
+        // could have been added on another phone while this one was offline.
+        // The sheet is the master, so it decides which id is free.
+        refreshMembers(sheetId)
+
         val existing = memberDao.getMembers(sheetId)
         val memberId = member.memberId.ifBlank {
             MemberIdGenerator.next(existing.map { it.memberId })
@@ -1085,6 +1090,21 @@ class MessRepositoryImpl @Inject constructor(
             breakfastWeight = config.breakfastWeight,
             totalBazar = CalculationEngine.totalBazar(bazar),
         )
+    }
+
+    /**
+     * Reads the `Members` tab from the sheet into the cache.
+     *
+     * Only the roster is refreshed – it is the one thing that decides the ids
+     * and the row positions of every other tab.
+     */
+    private suspend fun refreshMembers(spreadsheetId: String) {
+        val rows = sheetsGateway.read(
+            spreadsheetId,
+            "${Tabs.MEMBERS}!A1:G${SheetSchema.MEMBERS_MAX_ROW}",
+        )
+        val members = SheetMappers.membersToEntities(spreadsheetId, rows)
+        if (members.isNotEmpty()) memberDao.upsertMembers(members)
     }
 
     /** Writes an audit entry into the local cache (it is pushed on flush). */

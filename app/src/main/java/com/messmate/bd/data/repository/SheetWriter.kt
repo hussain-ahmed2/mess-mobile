@@ -219,17 +219,36 @@ class SheetWriter @Inject constructor(
         spreadsheetId: String,
         payload: OutboxPayload.SetDepositStatus,
     ) {
-        val deposit = depositDao.getDeposit(spreadsheetId, payload.depositId) ?: return
+        // The row of a deposit that was appended by this device is not known
+        // yet – the sheet is asked where the entry actually lives.
+        val row = rowOfId(spreadsheetId, Tabs.DEPOSITS, payload.depositId) ?: return
         sheetsGateway.batchWrite(
             spreadsheetId = spreadsheetId,
             ranges = listOf(
                 SheetValueRange(
-                    "${Tabs.DEPOSITS}!G${deposit.sheetRow}",
+                    "${Tabs.DEPOSITS}!G$row",
                     listOf(listOf(payload.status)),
                 ),
             ),
             inputOption = SheetInputOption.RAW,
         )
+    }
+
+    /**
+     * The 1-based row of an entry inside a ledger tab.
+     *
+     * The id column (A) is read from the sheet, so it is always correct – even
+     * for rows this device has just appended.
+     */
+    private suspend fun rowOfId(
+        spreadsheetId: String,
+        tab: String,
+        id: String,
+    ): Int? {
+        val rows = sheetsGateway.read(spreadsheetId, "$tab!A1:A${SheetSchema.LEDGER_MAX_ROW}")
+        val index = rows.indexOfFirst { it.getOrNull(0)?.trim() == id }
+        // The first row of the returned list is the header (row 1 of the sheet).
+        return if (index < 0) null else index + 1
     }
 
     private suspend fun writeSeatRent(spreadsheetId: String, payload: OutboxPayload.SetSeatRent) {

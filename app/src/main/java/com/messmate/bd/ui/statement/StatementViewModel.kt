@@ -8,6 +8,7 @@ import com.messmate.bd.R
 import com.messmate.bd.domain.model.MemberStatement
 import com.messmate.bd.domain.model.Mess
 import com.messmate.bd.domain.model.MessConfig
+import com.messmate.bd.domain.model.MessTotals
 import com.messmate.bd.domain.repository.MessRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +46,13 @@ class StatementViewModel @Inject constructor(
         initialValue = null,
     )
 
+    /** The headline numbers of the month (bazar, meals, meal rate). */
+    val totals: StateFlow<MessTotals> = messRepository.observeTotals().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = MessTotals(0.0, 0.0, 0.0, 0.0),
+    )
+
     private val _events = MutableStateFlow<String?>(null)
     val events: StateFlow<String?> = _events.asStateFlow()
 
@@ -67,6 +75,7 @@ class StatementViewModel @Inject constructor(
                     messName = currentMess.name,
                     month = currentConfig.monthYear,
                     config = currentConfig,
+                    totals = totals.value,
                     statements = currentStatements,
                 )
             }.onSuccess { uri ->
