@@ -130,43 +130,45 @@ the app shows the sheet's numbers while offline. Change one → change the other
 
 ---
 
-## 4. NOT verified yet (needs a real device + a real client id)
+## 4. Verified on a real device
 
-Nothing has been executed against the live Google APIs. Check in this order:
+Everything below was run on a realme RMX2030 against the real Google APIs
+(AGP debug build, `adb install`):
 
-1. **Sign in** – Credential Manager account picker → the `drive.file` consent
-   screen → the app reaches the onboarding.
-2. **Create a mess** – the sheet appears in the manager's Drive; open it in the
-   browser and check:
-   * all 8 tabs exist, `Sheet1` is gone, row 1 is frozen;
-   * the `Summary` tab shows `TotalBazar`, `TotalMeals`, `LiveMealRate`,
-     `TotalEqualUtilities` and one formula row per member;
-   * the `Meals` tab has `members × days` rows.
-3. **Second device** – share the sheet with a second Gmail, join it there and
-   toggle a meal → the first device sees it after a sync.
-4. **Cut-off** – set a cut-off 2 minutes ahead, wait → the switch locks for the
-   member, the manager can still override.
-5. **Offline** – airplane mode, log a bazar trip → the "pending sync" badge
+| Check | Result |
+|-------|--------|
+| App starts, onboarding renders | ✅ |
+| Credential Manager account picker ("to continue to MessMate BD") | ✅ |
+| `drive.file` consent screen ("See, edit, create and delete only the specific Google Drive files you use with this app") | ✅ |
+| The consent is granted, the session is stored encrypted | ✅ |
+| "Create a new mess" → a spreadsheet appears in Drive | ✅ |
+| The sheet has all 8 tabs, the header row is frozen, `Config` has the 8 key/value pairs, `LockStatus=OPEN` | ✅ |
+| The `Meals` tab has one pre-populated row per (member, day) | ✅ |
+| A meal toggle is written to the right cell (checked in the DB and in the sheet) | ✅ |
+| The `Summary` tab computes `TotalMeals = 1` with its own `SUMIFS` formula, no `#REF!`/`#NAME?` | ✅ |
+| The `AuditLog` round trips (MESS_CREATED + MEAL_OVERRIDDEN) | ✅ |
+| The cut-off rules ("cutoff has passed" / "Closes in 4h 31m") | ✅ |
+| The runtime language switch (English ⇄ বাংলা) | ✅ |
+
+Still to check with a **second** device / account:
+
+1. A member joins a sheet that the manager shared with them (the `drive.file`
+   scope only grants access to files the user picked or the app created).
+2. Offline behaviour: log a bazar trip in airplane mode → the pending badge
    appears → back online → the row shows up in the sheet.
-6. **Month end** – close the month → the old sheet is locked and renamed, a new
-   sheet exists for the next month with the carried-over balances.
-7. **PDF** – export the statement and share it to WhatsApp.
-
----
+3. "Close month & roll over": the old sheet is locked and renamed, a new sheet
+   exists for the next month with the carried-over balances.
+4. The PDF export (share sheet).
 
 ## 5. Known gaps / things to improve
 
 Ordered by how likely they are to bite.
 
-1. **`GoogleAuthManager.currentToken()` uses `runBlocking` inside the HTTP
-   interceptor.** It runs on an IO thread, so it works, but it can deadlock if
-   the main thread is ever blocked. Better: mint the token before the request
-   (`GoogleAuthManager` exposes `refreshAccessToken()`), or cache a token that
-   is refreshed by the sync worker.
-2. **The scope consent can expire.** `refreshAccessToken()` returns `null` when
-   Google wants a consent screen again; the request then fails with "no
-   account". The UI should react by calling
-   `accountRepository.requestAccessToken(activity)` again.
+1. ~~`runBlocking` in the HTTP interceptor~~ – **fixed**: the token is now
+   renewed before a request (`refreshIfNeeded()` in the Sheets/Drive
+   gateways), the interceptor only reads the cached token, and a 401 drops it.
+2. ~~The scope consent can expire~~ – **fixed**: `needsConsent` is raised and
+   the app shows a dialog that re-opens the consent screen.
 3. **The manager cannot override another member's meal from the dashboard.**
    The repository allows it (`setMeal` with any member id + MANAGER role), but
    the UI only toggles *my own* meals. A member picker is missing.
@@ -177,6 +179,8 @@ Ordered by how likely they are to bite.
    `Σ member meals == total meals` (no money leaks), but the sheet cannot
    distinguish "member was a guest" from "member hosted guests".
 6. **The audit trail has no manual entries** – only mutations are logged.
+   (The optimistic entry and the sheet row now share one id, so a sync does
+   not duplicate it.)
 7. **No push notifications.** Members do not get told that the meal rate moved.
 8. **The QR scanner needs the camera permission** – the flow is implemented
    (`zxing-android-embedded`), the runtime permission dialog is not.
